@@ -11,7 +11,7 @@ class Pessoa(ABC):
         self._documento = documento
         self._id_pessoa = id_pessoa
         self._data_cadastro = data_cadastro
-        self._telefones = []  # relação 1,n
+        self._telefones = []  
 
     @property
     def email(self):
@@ -23,4 +23,9 @@ class Pessoa(ABC):
 
     def adicionar_telefone(self, telefone):
         self._telefones.append(telefone)
+
+#Telefone
+class Telefone:
+    def __init__(self, numero):
+        self._numero = numero
 
