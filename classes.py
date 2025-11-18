@@ -39,7 +39,7 @@ class Locador(Pessoa):
 
         self._conta_bancaria = conta_bancaria
         self._avaliacao_proprietario = avaliacao_proprietario
-        self._imoveis = []  # relação 1,n
+        self._imoveis = []  
 
     def adicionar_imovel(self, imovel):
         self._imoveis.append(imovel)

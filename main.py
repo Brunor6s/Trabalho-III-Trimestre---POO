@@ -1,40 +1,67 @@
-## main.py
-
-python
-from datetime import date, timedelta
-from classes import Proprietario, Locatario, Endereco, Imovel
-from services import ContratoService, DescontoService
-from repository import ImovelRepository
-
-repo = ImovelRepository()
+# main.py
+from datetime import date
+from classes import Locador, Locatario, Imovel, Amenidade, Anuncio
 
 
-prop = Proprietario('Ana Silva', 'ana@example.com', '123.456.789-00')
-end = Endereco('Rua A', '10', 'São Paulo', 'SP')
-imovel = Imovel('Apê Centro', 'Apartamento 1 quarto', end, 2000.0)
-prop.adicionar_imovel(imovel)
-repo.adicionar(imovel)
+#Objetos
+locador = Locador(
+    primeiro_nome="Maria",
+    sobrenome="Emelau",
+    email="emelau@gmail.com",
+    data_nascimento="10/01/1985",
+    documento="123.456.789-00",
+    id_pessoa=1,
+    data_cadastro="18/11/2024",
+    conta_bancaria="NuBank - 1234",
+    avaliacao_proprietario=5
+)
+
+locatario = Locatario(
+    primeiro_nome="Rogerio",
+    sobrenome="Ceni",
+    email="r.ceni@example.com",
+    data_nascimento="01/05/1990",
+    documento="SP-12.345.678",
+    id_pessoa=2,
+    data_cadastro="18/11/2024",
+    preferencias="Silencioso"
+)
 
 
-loc = Locatario('João Pereira', 'joao@example.com', 'MG-12.345.678')
-
-cs = ContratoService()
-inicio = date.today()
-fim = inicio.replace(year=inicio.year + 1)
-contrato = cs.criar_contrato(imovel, prop, loc, inicio, fim)
-
-print(f"Contrato criado entre {prop.nome} e {loc.nome}, duração {contrato.duracao_dias} dias")
+#Amenidades
+g2porta = Amenidade(id_amenidade=1, nome="Geladeira duas portas")
+ar = Amenidade(id_amenidade=2, nome="Ar-Condicionado")
 
 
-ds = DescontoService()
-total = ds.calcular_total(imovel, 12, loc)
-print(f"Total para 12 meses com desconto: R$ {total:.2f}")
+# Criando imóvel
+imovel = Imovel(
+    endereco="Avenida Brasil, 100",
+    status="Disponível",
+    id_imovel=10,
+    titulo="Apartamento Centro",
+    descricao="1 quarto, sala, cozinha",
+    tipo="Apartamento",
+    area_m2=45,
+    valor_aluguel=1.800
+)
+
+# Relacionando amenidades
+imovel.adicionar_amenidade(g2porta)
+imovel.adicionar_amenidade(ar)
+
+# Criando anúncio
+anuncio = Anuncio(
+    id_anuncio=100,
+    data_publicacao="18/11/2025",
+    preco=1.800,
+    disponibilidade=True,
+    imovel=imovel
+)
 
 
-print('Imóveis disponíveis:', [i.titulo for i in repo.listar_disponiveis()])
-
-
-contrato.cancelar()
-print('Contrato ativo?', contrato.esta_ativo())
-print('Imóveis disponíveis depois do cancelamento:', [i.titulo for i in repo.listar_disponiveis()])
-
+# Exibindo algumas informações
+print("Locador:", locador.exibir_informacoes())
+print("Locatário:", locatario.exibir_informacoes())
+print("Imóvel:", imovel._titulo)
+print("Amenidades:", [a._nome for a in imovel._amenidades])
+print("Anúncio criado ID:", anuncio._id_anuncio)
