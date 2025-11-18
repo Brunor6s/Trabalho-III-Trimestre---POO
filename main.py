@@ -2,7 +2,7 @@
 
 python
 from datetime import date, timedelta
-from models import Proprietario, Locatario, Endereco, Imovel
+from classes import Proprietario, Locatario, Endereco, Imovel
 from services import ContratoService, DescontoService
 from repository import ImovelRepository
 
