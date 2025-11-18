@@ -130,3 +130,10 @@ class Contrato:
     def adicionar_pagamento(self, pagamento):
         self._pagamentos.append(pagamento)
 
+#Pagamentos
+class Pagamento:
+    def __init__(self, id_pagamento, data_pagamento, valor_pago, metodo_pagamento):
+        self._id_pagamento = id_pagamento
+        self._data_pagamento = data_pagamento
+        self._valor_pago = valor_pago
+        self._metodo_pagamento = metodo_pagamento
