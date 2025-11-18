@@ -1,2 +1,7 @@
 # Trabalho-III-Trimestre---POO
-criar classes e funções no main
+criar classes e funções 
+criar services
+
+
+
+----- linkar tudo para o main
