@@ -115,3 +115,18 @@ class Anuncio:
         self._preco = preco
         self._disponibilidade = disponibilidade
         self._imovel = imovel
+
+#Contrato 
+class Contrato:
+    def __init__(self, numero_contrato, data_inicio, data_fim, valor_final, anuncio, locatario):
+        self._numero_contrato = numero_contrato
+        self._data_inicio = data_inicio
+        self._data_fim = data_fim
+        self._valor_final = valor_final
+        self._anuncio = anuncio
+        self._locatario = locatario
+        self._pagamentos = [] 
+
+    def adicionar_pagamento(self, pagamento):
+        self._pagamentos.append(pagamento)
+
