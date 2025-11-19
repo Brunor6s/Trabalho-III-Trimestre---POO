@@ -42,33 +42,21 @@ def criar_contrato(imovel, locatario, data_inicio, data_fim, valor_total):
 
 
 #Relacionamento
-def adicionar_amenidade_ao_imovel(imovel: Imovel, amenidade: Amenidade):
+def adicionar_amenidade_ao_imovel(imovel, amenidade):
     imovel.adicionar_amenidade(amenidade)
 
 
-def adicionar_anuncio_ao_imovel(imovel: Imovel, anuncio: Anuncio):
-    imovel.adicionar_anuncio(anuncio)
+def adicionar_foto_ao_imovel(imovel, foto):
+    imovel.adicionar_foto(foto)
 
 
-def adicionar_avaliacao_ao_imovel(imovel: Imovel, avaliacao: Avaliacao):
+def adicionar_avaliacao_ao_imovel(imovel, avaliacao):
     imovel.adicionar_avaliacao(avaliacao)
 
 
-def registrar_pagamento_no_contrato(contrato: Contrato, pagamento: Pagamento):
-    contrato.registrar_pagamento(pagamento)
-
-#Consultas
-def obter_media_avaliacoes(imovel: Imovel):
-    return imovel.calcular_media_avaliacoes()
+def adicionar_anuncio_ao_imovel(imovel, anuncio):
+    imovel.adicionar_anuncio(anuncio)
 
 
-def listar_anuncios_do_imovel(imovel: Imovel):
-    return imovel.anuncios
-
-
-def listar_amenidades_do_imovel(imovel: Imovel):
-    return imovel.amenidades
-
-
-def listar_avaliacoes_do_imovel(imovel: Imovel):
-    return imovel.avaliacoes
+def registrar_pagamento_em_contrato(contrato, pagamento):
+    contrato.adicionar_pagamento(pagamento)
