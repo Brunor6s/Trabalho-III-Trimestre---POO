@@ -1,5 +1,4 @@
 
-Betano: 
 from classes import (
     Locador, Locatario, Telefone, Foto, Amenidade, Avaliacao,
     Imovel, Anuncio, Contrato, Pagamento
