@@ -42,7 +42,7 @@ imovel = Imovel(
     descricao="1 quarto, sala, cozinha",
     tipo="Apartamento",
     area_m2=45,
-    valor_aluguel=1.800
+    valor_aluguel=1800
 )
 
 # Relacionando amenidades
@@ -53,7 +53,7 @@ imovel.adicionar_amenidade(ar)
 anuncio = Anuncio(
     id_anuncio=100,
     data_publicacao="18/11/2025",
-    preco=1.800,
+    preco=1800,
     disponibilidade=True,
     imovel=imovel
 )
