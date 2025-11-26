@@ -11,12 +11,12 @@ from datetime import datetime
 
 def abrir_cadastrar_locador(parent):
     w = tk.Toplevel(parent)
-    w.title("Cadastrar Locador")
+    w.title("Cadastrar Hotel")
 
-    labels = ["Primeiro nome", "Sobrenome", "Email", "Data nascimento (dd/mm/YYYY)", "Documento", "Conta bancária", "Avaliação (int)"]
+    labels = ["Rede", "Cidade", "Email", "Conta para pagamento", "Documento", "Endereço"]
     entries = []
     for i, text in enumerate(labels):
-        tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=6, pady=4)
+        tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=5, pady=4)
         e = tk.Entry(w); e.grid(row=i, column=1, padx=6, pady=4)
         entries.append(e)
 
@@ -28,8 +28,7 @@ def abrir_cadastrar_locador(parent):
                 email=entries[2].get(),
                 data_nascimento=entries[3].get(),
                 documento=entries[4].get(),
-                conta_bancaria=entries[5].get(),
-                avaliacao_proprietario=int(entries[6].get() or 0)
+                avaliacao_proprietario=entries[6].get(),
             )
             messagebox.showinfo("Sucesso", f"Locador cadastrado (ID {loc._id_pessoa})")
             w.destroy()
@@ -72,9 +71,9 @@ def abrir_cadastrar_locatario(parent):
 
 def abrir_cadastrar_imovel(parent):
     w = tk.Toplevel(parent)
-    w.title("Cadastrar Imóvel")
+    w.title("Cadastrar Quarto")
 
-    labels = ["Endereço", "Status (Disponível)", "Título", "Descrição", "Tipo", "Área (m2)", "Valor aluguel (num)"]
+    labels = ["Avaliação", "Status (Disponível)", "Andar", "Número do quarto", "Serviço de quarto", "Camas", "Valor aluguel"]
     entries = []
     for i, text in enumerate(labels):
         tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=6, pady=4)
@@ -96,7 +95,7 @@ def abrir_cadastrar_imovel(parent):
         try:
             loc_text = combo_locador.get()
             if not loc_text:
-                raise ValueError("Selecione um locador")
+                raise ValueError("Selecione o Hotel")
             loc_id = int(loc_text.split(" - ")[0])
             imv = criar_imovel(
                 endereco=entries[0].get(),
@@ -108,11 +107,11 @@ def abrir_cadastrar_imovel(parent):
                 valor_aluguel=float(entries[6].get() or 0),
                 locador_id=loc_id
             )
-            messagebox.showinfo("Sucesso", f"Imóvel cadastrado (ID {imv._id_imovel})")
+            messagebox.showinfo("Sucesso", f"Quarto cadastrado (ID {imv._id_imovel})")
             w.destroy()
             atualizar_comboboxes()
         except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao cadastrar imóvel: {e}")
+            messagebox.showerror("Erro", f"Falha ao cadastrar quarto: {e}")
 
     tk.Button(w, text="Salvar", command=salvar).grid(row=len(labels)+1, column=0, columnspan=2, pady=8)
 
@@ -237,18 +236,18 @@ def main():
     root.title("Sistema de Locação - Tkinter (Memória)")
     root.geometry("520x360")
 
-    tk.Label(root, text="Sistema de Locação", font=("Helvetica", 16)).pack(pady=12)
+    tk.Label(root, text="Sistema de Aluguel de Quarto de Hotel", font=("Helvetica", 16)).pack(pady=12)
 
     frame = tk.Frame(root)
     frame.pack(pady=8)
 
-    tk.Button(frame, text="Cadastrar Locador", width=30, command=lambda: abrir_cadastrar_locador(root)).grid(row=0, column=0, pady=6)
+    tk.Button(frame, text="Cadastrar Hotel", width=30, command=lambda: abrir_cadastrar_locador(root)).grid(row=0, column=0, pady=6)
     tk.Button(frame, text="Cadastrar Locatário", width=30, command=lambda: abrir_cadastrar_locatario(root)).grid(row=1, column=0, pady=6)
-    tk.Button(frame, text="Cadastrar Imóvel", width=30, command=lambda: abrir_cadastrar_imovel(root)).grid(row=2, column=0, pady=6)
+    tk.Button(frame, text="Cadastrar Quarto", width=30, command=lambda: abrir_cadastrar_imovel(root)).grid(row=2, column=0, pady=6)
     tk.Button(frame, text="Listagens", width=30, command=lambda: abrir_listagens(root)).grid(row=3, column=0, pady=6)
-    tk.Button(frame, text="Alugar Imóvel", width=30, command=lambda: abrir_alugar(root)).grid(row=4, column=0, pady=6)
+    tk.Button(frame, text="Alugar Quarto", width=30, command=lambda: abrir_alugar(root)).grid(row=4, column=0, pady=6)
 
-    tk.Label(root, text="Observação: o sistema salva apenas na memória (execução atual).").pack(side="bottom", pady=8)
+    tk.Label(root, text="Copyright 2025 grupo 8").pack(side="bottom", pady=8)
 
     root.mainloop()
 
