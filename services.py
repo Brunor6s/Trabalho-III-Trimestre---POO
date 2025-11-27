@@ -1,33 +1,50 @@
 from classes import Cliente, Funcionario, Quarto, Reserva
 from datetime import date
 
-# Serviço de gerenciamento de clientes
 class ClienteService:
     def __init__(self):
         self.clientes = []
 
     def cadastrarCliente(self, cliente: Cliente):
         self.clientes.append(cliente)
-        print("Cliente cadastrado com sucesso!")
+        return "Cliente cadastrado com sucesso!"
 
     def listarClientes(self):
+        if not self.clientes:
+            return "Nenhum cliente cadastrado."
+
+        texto = ""
         for c in self.clientes:
-            c.exibirDados()
-            print("-------------------------")
+            texto += (
+                f"Cliente:\n"
+                f"Nome: {c.nome}\n"
+                f"Documento: {c.documento}\n"
+                f"Email: {c.email}\n"
+                f"Telefone: {c.telefone}\n"
+                f"-----------------------------\n"
+            )
+        return texto
 
 
-# Serviço de gerenciamento de quartos
 class QuartoService:
     def __init__(self):
         self.quartos = []
 
     def adicionarQuarto(self, quarto: Quarto):
         self.quartos.append(quarto)
-        print("Quarto adicionado!")
+        return "Quarto adicionado!"
 
     def listarQuartos(self):
+        if not self.quartos:
+            return "Nenhum quarto cadastrado."
+
+        texto = ""
         for q in self.quartos:
-            print(f"Quarto {q.numero} | Tipo: {q.tipo} | Disponível: {q.disponivel}")
+            texto += (
+                f"Quarto {q.numero} | Tipo: {q.tipo} | "
+                f"Disponível: {'Sim' if q.disponivel else 'Não'}\n"
+            )
+        return texto
 
     def buscarDisponivel(self):
         for q in self.quartos:
@@ -36,7 +53,6 @@ class QuartoService:
         return None
 
 
-# Serviço de reservas
 class ReservaService:
     def __init__(self):
         self.reservas = []
@@ -45,32 +61,49 @@ class ReservaService:
         try:
             reserva = Reserva(idReserva, checkin, checkout, cliente, quarto)
             self.reservas.append(reserva)
-            print("Reserva criada!")
             return reserva
         except Exception as e:
-            print("Erro ao criar reserva:", e)
             return None
 
     def listarReservas(self):
+        if not self.reservas:
+            return "Nenhuma reserva cadastrada."
+
+        texto = ""
         for r in self.reservas:
-            print(f"Reserva {r.idReserva} - Cliente: {r.cliente.nome} - Quarto: {r.quarto.numero}")
+            texto += (
+                f"Reserva {r.idReserva} - Cliente: {r.cliente.nome} - "
+                f"Quarto: {r.quarto.numero}\n"
+            )
+        return texto
 
     def cancelar(self, reserva: Reserva):
         if reserva in self.reservas:
             reserva.cancelarReserva()
-            print("Reserva cancelada!")
+            return "Reserva cancelada!"
+        return "Reserva inexistente."
 
 
-# Serviço do Funcionário
 class FuncionarioService:
     def __init__(self):
         self.funcionarios = []
 
     def cadastrarFuncionario(self, funcionario: Funcionario):
         self.funcionarios.append(funcionario)
-        print("Funcionário cadastrado!")
+        return "Funcionário cadastrado!"
 
     def listarFuncionarios(self):
+        if not self.funcionarios:
+            return "Nenhum funcionário cadastrado."
+
+        texto = ""
         for f in self.funcionarios:
-            f.exibirDados()
-            print("-------------------------")
+            texto += (
+                f"Funcionário:\n"
+                f"Nome: {f.nome}\n"
+                f"Documento: {f.documento}\n"
+                f"Email: {f.email}\n"
+                f"Cargo: {f.cargo}\n"
+                f"-----------------------------\n"
+            )
+        return texto

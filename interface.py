@@ -1,256 +1,195 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from services import (
-    criar_locador, criar_locatario, criar_imovel, listar_locadores,
-    listar_locatarios, listar_anuncios_disponiveis, listar_imoveis,
-    alugar_imovel, listar_contratos
-)
-from datetime import datetime
+from tkinter import messagebox
+from classes import Cliente, Funcionario, Quarto
+from services import ClienteService, FuncionarioService, QuartoService, ReservaService
+from datetime import date
 
-# -------------------- JANELAS DE CADASTRO --------------------
+# Função auxiliar para converter datas simples
+def parse_data(txt):
+    try:
+        y, m, d = map(int, txt.split("-"))
+        return date(y, m, d)
+    except:
+        messagebox.showerror("Erro", "Data inválida, Use YYYY-MM-DD")
+        return None
 
-def abrir_cadastrar_locador(parent):
-    w = tk.Toplevel(parent)
-    w.title("Cadastrar Hotel")
+class InterfaceHotel:
+    def __init__(self):
+        self.clienteService = ClienteService()
+        self.funcService = FuncionarioService()
+        self.quartoService = QuartoService()
+        self.reservaService = ReservaService()
 
-    labels = ["Rede", "Cidade", "Email", "Conta para pagamento", "Documento", "Endereço"]
-    entries = []
-    for i, text in enumerate(labels):
-        tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=5, pady=4)
-        e = tk.Entry(w); e.grid(row=i, column=1, padx=6, pady=4)
-        entries.append(e)
+        # dados iniciais
+        self.cliente_padrao = Cliente("Rogério", "123", "rogerio@gmail.com", 1, "1234-5678")
+        self.func_padrao = Funcionario("Peter", "123", "peter@hotel.com", 1, "Recepção")
+        self.clienteService.cadastrarCliente(self.cliente_padrao)
+        self.funcService.cadastrarFuncionario(self.func_padrao)
 
-    def salvar():
-        try:
-            loc = criar_locador(
-                primeiro_nome=entries[0].get(),
-                sobrenome=entries[1].get(),
-                email=entries[2].get(),
-                data_nascimento=entries[3].get(),
-                documento=entries[4].get(),
-                avaliacao_proprietario=entries[6].get(),
-            )
-            messagebox.showinfo("Sucesso", f"Locador cadastrado (ID {loc._id_pessoa})")
-            w.destroy()
-            atualizar_comboboxes()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao cadastrar locador: {e}")
+        self.quartoService.adicionarQuarto(Quarto(101, "Solteiro", 150))
+        self.quartoService.adicionarQuarto(Quarto(102, "Casal", 200))
 
-    tk.Button(w, text="Salvar", command=salvar).grid(row=len(labels), column=0, columnspan=2, pady=8)
+        # janela principal
+        self.janela = tk.Tk()
+        self.janela.title("Sistema de Hotel")
 
+        tk.Label(self.janela, text="Login (c/f/d)").pack()
+        self.usuario = tk.Entry(self.janela)
+        self.usuario.pack()
 
-def abrir_cadastrar_locatario(parent):
-    w = tk.Toplevel(parent)
-    w.title("Cadastrar Locatário")
+        tk.Label(self.janela, text="Senha").pack()
+        self.senha = tk.Entry(self.janela, show="*")
+        self.senha.pack()
 
-    labels = ["Primeiro nome", "Sobrenome", "Email", "Data nascimento (dd/mm/YYYY)", "Documento", "Preferências"]
-    entries = []
-    for i, text in enumerate(labels):
-        tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=6, pady=4)
-        e = tk.Entry(w); e.grid(row=i, column=1, padx=6, pady=4)
-        entries.append(e)
+        tk.Button(self.janela, text="Entrar", command=self.login).pack(pady=10)
 
-    def salvar():
-        try:
-            loc = criar_locatario(
-                primeiro_nome=entries[0].get(),
-                sobrenome=entries[1].get(),
-                email=entries[2].get(),
-                data_nascimento=entries[3].get(),
-                documento=entries[4].get(),
-                preferencias=entries[5].get()
-            )
-            messagebox.showinfo("Sucesso", f"Locatário cadastrado (ID {loc._id_pessoa})")
-            w.destroy()
-            atualizar_comboboxes()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao cadastrar locatário: {e}")
+        self.janela.mainloop()
 
-    tk.Button(w, text="Salvar", command=salvar).grid(row=len(labels), column=0, columnspan=2, pady=8)
+    def limpar(self):
+        for widget in self.janela.winfo_children():
+            widget.destroy()
 
+    def login(self):
+        u = self.usuario.get()
+        s = self.senha.get()
 
-def abrir_cadastrar_imovel(parent):
-    w = tk.Toplevel(parent)
-    w.title("Cadastrar Quarto")
+        usuarios = {
+            "c": {"senha": "123", "tipo": "cliente"},
+            "f": {"senha": "123", "tipo": "funcionario"},
+            "d": {"senha": "123", "tipo": "dono"},
+        }
 
-    labels = ["Avaliação", "Status (Disponível)", "Andar", "Número do quarto", "Serviço de quarto", "Camas", "Valor aluguel"]
-    entries = []
-    for i, text in enumerate(labels):
-        tk.Label(w, text=text).grid(row=i, column=0, sticky="w", padx=6, pady=4)
-        e = tk.Entry(w); e.grid(row=i, column=1, padx=6, pady=4)
-        entries.append(e)
+        if u not in usuarios or usuarios[u]["senha"] != s:
+            messagebox.showerror("Erro", "Login inválido")
+            return
 
-    tk.Label(w, text="Locador (ID)").grid(row=len(labels), column=0, sticky="w", padx=6, pady=4)
-    combo_locador = ttk.Combobox(w, state="readonly")
-    combo_locador.grid(row=len(labels), column=1, padx=6, pady=4)
+        tipo = usuarios[u]["tipo"]
+        self.limpar()
 
-    def preencher_locadores():
-        vals = [f"{l._id_pessoa} - {l._primeiro_nome} {l._sobrenome}" for l in listar_locadores()]
-        combo_locador['values'] = vals
-        if vals:
-            combo_locador.current(0)
-    preencher_locadores()
+        if tipo == "cliente":
+            self.menu_cliente()
+        elif tipo == "funcionario":
+            self.menu_func()
+        else:
+            self.menu_dono()
 
-    def salvar():
-        try:
-            loc_text = combo_locador.get()
-            if not loc_text:
-                raise ValueError("Selecione o Hotel")
-            loc_id = int(loc_text.split(" - ")[0])
-            imv = criar_imovel(
-                endereco=entries[0].get(),
-                status=entries[1].get() or "Disponível",
-                titulo=entries[2].get(),
-                descricao=entries[3].get(),
-                tipo=entries[4].get(),
-                area_m2=float(entries[5].get() or 0),
-                valor_aluguel=float(entries[6].get() or 0),
-                locador_id=loc_id
-            )
-            messagebox.showinfo("Sucesso", f"Quarto cadastrado (ID {imv._id_imovel})")
-            w.destroy()
-            atualizar_comboboxes()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao cadastrar quarto: {e}")
+    # Menu do cliente
+    def menu_cliente(self):
+        tk.Label(self.janela, text="Menu Cliente").pack()
+        tk.Button(self.janela, text="Quartos Disponíveis", command=self.ver_quartos).pack(pady=4)
+        tk.Button(self.janela, text="Fazer Reserva", command=self.fazer_reserva).pack(pady=4)
+        tk.Button(self.janela, text="Minhas Reservas", command=self.minhas_reservas).pack(pady=4)
+        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
-    tk.Button(w, text="Salvar", command=salvar).grid(row=len(labels)+1, column=0, columnspan=2, pady=8)
+    def ver_quartos(self):
+        msg = ""
+        for q in self.quartoService.quartos:
+            msg += f"Quarto {q.numero} | Tipo: {q.tipo} | Disponível: {q.disponivel}\n"
+        messagebox.showinfo("Quartos", msg)
 
+    def fazer_reserva(self):
+        self.limpar()
 
-# -------------------- LISTAGENS E ALUGUEL --------------------
+        tk.Label(self.janela, text="Check-in (YYYY-MM-DD)").pack()
+        ent1 = tk.Entry(self.janela)
+        ent1.pack()
 
-def abrir_listagens(parent):
-    w = tk.Toplevel(parent)
-    w.title("Listagens")
+        tk.Label(self.janela, text="Check-out (YYYY-MM-DD)").pack()
+        ent2 = tk.Entry(self.janela)
+        ent2.pack()
 
-    nb = ttk.Notebook(w); nb.pack(fill="both", expand=True, padx=6, pady=6)
+        def confirmar():
+            d1 = parse_data(ent1.get())
+            d2 = parse_data(ent2.get())
+            if not d1 or not d2:
+                return
 
-    # LOCADORES
-    f1 = tk.Frame(nb)
-    txt1 = tk.Text(f1, width=80, height=20)
-    txt1.pack(fill="both", expand=True)
-    texto = ""
-    for l in listar_locadores():
-        texto += f"Locador ID {l._id_pessoa}: {l._primeiro_nome} {l._sobrenome} | Email: {l._email}\n"
-        if getattr(l, "_imoveis", None):
-            for im in l._imoveis:
-                texto += f"   → Imóvel ID {im._id_imovel}: {im._titulo} | {im._endereco} | Status: {im._status}\n"
-    txt1.insert("1.0", texto or "Nenhum locador cadastrado.")
-    nb.add(f1, text="Locadores")
+            quarto = self.quartoService.buscarDisponivel()
+            if not quarto:
+                messagebox.showwarning("Aviso", "Sem quartos livres!")
+                return
 
-    # LOCATÁRIOS
-    f2 = tk.Frame(nb)
-    txt2 = tk.Text(f2, width=80, height=20)
-    txt2.pack(fill="both", expand=True)
-    texto = ""
-    for l in listar_locatarios():
-        texto += f"Locatário ID {l._id_pessoa}: {l._primeiro_nome} {l._sobrenome} | Email: {l._email}\n"
-    txt2.insert("1.0", texto or "Nenhum locatário cadastrado.")
-    nb.add(f2, text="Locatários")
+            reserva = self.reservaService.criarReserva(1, d1, d2, self.cliente_padrao, quarto)
+            if reserva:
+                valor = reserva.calcularTotal()
+                messagebox.showinfo("OK", f"Reserva criada! Total: R$ {valor}")
+                self.menu_cliente()
 
-    # IMÓVEIS
-    f3 = tk.Frame(nb)
-    txt3 = tk.Text(f3, width=80, height=20)
-    txt3.pack(fill="both", expand=True)
-    texto = ""
-    for im in listar_imoveis():
-        texto += f"Imóvel ID {im._id_imovel}: {im._titulo} | {im._endereco} | Status: {im._status} | Valor: {im._valor_aluguel}\n"
-    txt3.insert("1.0", texto or "Nenhum imóvel cadastrado.")
-    nb.add(f3, text="Imóveis")
+        tk.Button(self.janela, text="Confirmar", command=confirmar).pack()
+        tk.Button(self.janela, text="Voltar", command=self.menu_cliente).pack(pady=5)
 
-    # CONTRATOS
-    f4 = tk.Frame(nb)
-    txt4 = tk.Text(f4, width=80, height=20)
-    txt4.pack(fill="both", expand=True)
-    texto = ""
-    for c in listar_contratos():
-        texto += f"Contrato Nº {c._numero_contrato}: Imóvel '{c._anuncio._imovel._titulo}' | Locatário: {c._locatario._primeiro_nome} {c._locatario._sobrenome} | {c._data_inicio} → {c._data_fim} | Valor: {c._valor_final}\n"
-    txt4.insert("1.0", texto or "Nenhum contrato registrado.")
-    nb.add(f4, text="Contratos")
+    def minhas_reservas(self):
+        msg = ""
+        for r in self.reservaService.reservas:
+            if r.cliente.nome == self.cliente_padrao.nome:
+                msg += f"Reserva {r.idReserva} - Quarto {r.quarto.numero}\n"
+        if msg == "": msg = "Nenhuma reserva encontrada."
+        messagebox.showinfo("Minhas reservas", msg)
+
+    # Menu do funcionário
+    def menu_func(self):
+        tk.Label(self.janela, text="Menu Funcionário").pack()
+        tk.Button(self.janela, text="Listar Reservas", command=lambda: self.msg_lista(self.reservaService.listarReservas())).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=lambda: self.msg_lista(self.quartoService.listarQuartos())).pack(pady=4)
+        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
+
+    def msg_lista(self, texto):
+        messagebox.showinfo("Informação", texto)
 
 
-def abrir_alugar(parent):
-    w = tk.Toplevel(parent)
-    w.title("Alugar Imóvel")
+    # Menu do dono
+    def menu_dono(self):
+        tk.Label(self.janela, text="Menu Dono").pack()
+        tk.Button(self.janela, text="Listar Funcionários", command=lambda: self.msg_lista(self.funcService.listarFuncionarios)).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=lambda: self.msg_lista(self.quartoService.listarQuartos)).pack(pady=4)
+        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
-    tk.Label(w, text="Anúncio disponível:").grid(row=0, column=0, sticky="w", padx=6, pady=4)
-    cb_anuncios = ttk.Combobox(w, state="readonly", width=60)
-    cb_anuncios.grid(row=0, column=1, padx=6, pady=4)
-
-    tk.Label(w, text="Locatário:").grid(row=1, column=0, sticky="w", padx=6, pady=4)
-    cb_locatarios = ttk.Combobox(w, state="readonly", width=60)
-    cb_locatarios.grid(row=1, column=1, padx=6, pady=4)
-
-    tk.Label(w, text="Data início (dd/mm/YYYY):").grid(row=2, column=0, sticky="w", padx=6, pady=4)
-    e_inicio = tk.Entry(w); e_inicio.grid(row=2, column=1, padx=6, pady=4)
-    e_inicio.insert(0, datetime.now().strftime("%d/%m/%Y"))
-
-    tk.Label(w, text="Data fim (dd/mm/YYYY):").grid(row=3, column=0, sticky="w", padx=6, pady=4)
-    e_fim = tk.Entry(w); e_fim.grid(row=3, column=1, padx=6, pady=4)
-    e_fim.insert(0, datetime.now().strftime("%d/%m/%Y"))
-
-    def preencher():
-        anuncios = listar_anuncios_disponiveis()
-        anuncios_str = [f"{a._id_anuncio} - {a._imovel._titulo} ({a._imovel._endereco}) - R$ {a._preco}" for a in anuncios]
-        cb_anuncios['values'] = anuncios_str
-        if anuncios_str:
-            cb_anuncios.current(0)
-
-        locs = listar_locatarios()
-        locs_str = [f"{l._id_pessoa} - {l._primeiro_nome} {l._sobrenome}" for l in locs]
-        cb_locatarios['values'] = locs_str
-        if locs_str:
-            cb_locatarios.current(0)
-
-    preencher()
-
-    def confirmar_aluguel():
-        try:
-            an = cb_anuncios.get()
-            if not an:
-                raise ValueError("Selecione um anúncio")
-            anuncio_id = int(an.split(" - ")[0])
-            loc = cb_locatarios.get()
-            if not loc:
-                raise ValueError("Selecione um locatário")
-            loc_id = int(loc.split(" - ")[0])
-            contrato = alugar_imovel(anuncio_id, loc_id, e_inicio.get(), e_fim.get())
-            messagebox.showinfo("Sucesso", f"Contrato criado: Nº {contrato._numero_contrato}")
-            w.destroy()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao alugar: {e}")
-        finally:
-            atualizar_comboboxes()
-
-    tk.Button(w, text="Confirmar aluguel", command=confirmar_aluguel).grid(row=4, column=0, columnspan=2, pady=10)
-
-
-# -------------------- UTIL / MAIN --------------------
-
-def atualizar_comboboxes():
-    # placeholder: as comboboxes são preenchidas quando as janelas abrem
-    pass
-
-
-def main():
-    root = tk.Tk()
-    root.title("Sistema de Locação - Tkinter (Memória)")
-    root.geometry("520x360")
-
-    tk.Label(root, text="Sistema de Aluguel de Quarto de Hotel", font=("Helvetica", 16)).pack(pady=12)
-
-    frame = tk.Frame(root)
-    frame.pack(pady=8)
-
-    tk.Button(frame, text="Cadastrar Hotel", width=30, command=lambda: abrir_cadastrar_locador(root)).grid(row=0, column=0, pady=6)
-    tk.Button(frame, text="Cadastrar Locatário", width=30, command=lambda: abrir_cadastrar_locatario(root)).grid(row=1, column=0, pady=6)
-    tk.Button(frame, text="Cadastrar Quarto", width=30, command=lambda: abrir_cadastrar_imovel(root)).grid(row=2, column=0, pady=6)
-    tk.Button(frame, text="Listagens", width=30, command=lambda: abrir_listagens(root)).grid(row=3, column=0, pady=6)
-    tk.Button(frame, text="Alugar Quarto", width=30, command=lambda: abrir_alugar(root)).grid(row=4, column=0, pady=6)
-
-    tk.Label(root, text="Copyright 2025 grupo 8").pack(side="bottom", pady=8)
-
-    root.mainloop()
-
+    def resetar(self):
+        self.limpar()
+        self.__init__()
 
 if __name__ == "__main__":
-    main()
+    InterfaceHotel()
+
+import tkinter as tk
+from tkinter import messagebox
+
+# Função para exibir mensagens dentro do Tkinter
+
+def mostrar_msg(msg):
+    messagebox.showinfo("Informação", msg)
+
+# Interface principal
+
+def abrir_interface(servico=None):
+    janela = tk.Tk()
+    janela.title("Sistema de Hotel - Interface")
+    janela.geometry("350x350")
+
+    tk.Label(janela, text="Sistema de Hotel", font=("Arial", 16)).pack(pady=10)
+
+    # Botão de criar reserva
+    tk.Button(
+        janela,
+        text="Realizar Reserva",
+        width=20,
+        command=lambda: mostrar_msg("Reserva realizada com sucesso!")
+    ).pack(pady=5)
+
+    # Botão de listar reservas
+    tk.Button(
+        janela,
+        text="Listar Reservas",
+        width=20,
+        command=lambda: mostrar_msg("Lista de reservas:")
+    ).pack(pady=5)
+
+    # Botão de sair
+    tk.Button(
+        janela,
+        text="Sair",
+        width=15,
+        command=janela.destroy
+    ).pack(pady=20)
+
+    janela.mainloop()
