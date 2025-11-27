@@ -7,7 +7,7 @@ class ClienteService:
 
     def cadastrar_cliente(self):
     if self.usuario_logado["tipo"] != "dono" or "funcionario":
-        messagebox.showerror("Acesso negado", "Apenas o dono pode cadastrar clientes!")
+        messagebox.showerror("Acesso negado")
         return
 
 
@@ -34,7 +34,7 @@ class QuartoService:
 
     def adicionarQuarto(self, quarto: Quarto):
         self.quartos.append(quarto)
-        return "Quarto adicionado!"
+        return "Quarto adicionado."
 
     def listarQuartos(self):
         if not self.quartos:
@@ -82,7 +82,7 @@ class ReservaService:
     def cancelar(self, reserva: Reserva):
         if reserva in self.reservas:
             reserva.cancelarReserva()
-            return "Reserva cancelada!"
+            return "Reserva cancelada."
         return "Reserva inexistente."
 
 
