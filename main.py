@@ -1,8 +1,8 @@
 from services import criar_pessoa, listar_pessoas, criar_imovel, listar_imoveis, criar_anuncio, listar_anuncios
 
-# Menu sistema de hotel
+# Menu do sistema de hotel
 def menu():
-    print("\n=== Sistema de Testes ===")
+    print("=== Sistema de Testes ===")
     print("1. Criar Pessoa")
     print("2. Listar Pessoas")
     print("3. Criar Imóvel")
@@ -13,50 +13,38 @@ def menu():
 
 
 def main():
-    while True:
-        menu()
-        opcao = input("Escolha uma opção: ")
+    print("=== SISTEMA DE HOTEL ===")
 
-        if opcao == "1":
-            nome = input("Nome da pessoa: ")
-            email = input("Email da pessoa: ")
-            criar_pessoa(nome, email)
-            print("Pessoa criada com sucesso!")
+    usuarios = {
+        "c": {"senha": "123", "tipo": "cliente"},
+        "f": {"senha": "123", "tipo": "funcionario"},
+        "d": {"senha": "123", "tipo": "dono"},
+    }
 
-        elif opcao == "2":
-            print("\n--- Lista de Pessoas ---")
-            for p in listar_pessoas():
-                print(f"ID: {p.id} | Nome: {p.nome} | Email: {p.email}")
+    nome = input("Usuário (c/f/d): ")
+    senha = input("Senha: ")
 
-        elif opcao == "3":
-            endereco = input("Endereço do imóvel: ")
-            preco = float(input("Preço da diária: "))
-            criar_imovel(endereco, preco)
-            print("Imóvel criado com sucesso!")
+    if nome not in usuarios or usuarios[nome]["senha"] != senha:
+        print("Login inválido.")
+        return
 
-        elif opcao == "4":
-            print("\n--- Lista de Imóveis ---")
-            for i in listar_imoveis():
-                print(f"ID: {i.id} | Endereço: {i.endereco} | Preço: {i.preco}")
+    tipo = usuarios[nome]["tipo"]
+    print(f"Login efetuado, tipo de usuário: {tipo.upper()}")
 
-        elif opcao == "5":
-            imovel_id = int(input("ID do imóvel para anúncio: "))
-            titulo = input("Título do anúncio: ")
-            criar_anuncio(imovel_id, titulo)
-            print("Anúncio criado com sucesso!")
+    servico = ServicoReserva()
+    cliente_teste = Cliente("João", "123456", "joao@gmail.com", 1, "9999-9999")
+    funcionario_teste = Funcionario("Pedro", "999888", "pedro@hotel.com", 1, "Recepção")
+    dono_teste = Funcionario("Mario", "888777", "mario@hotel.com", 2, "Dono")
+    quarto101 = Quarto(101, "Luxo", 200.0)
 
-        elif opcao == "6":
-            print("\n--- Lista de Anúncios ---")
-            for a in listar_anuncios():
-                print(f"ID: {a.id} | Título: {a.titulo} | Imóvel: {a.imovel_id}")
+    if tipo == "cliente":
+        menu_cliente(servico, cliente_teste, quarto101)
+    elif tipo == "funcionario":
+        menu_funcionario(servico, funcionario_teste, quarto101)
+    elif tipo == "dono":
+        menu_dono(servico, dono_teste, quarto101)
 
-        elif opcao == "0":
-            print("Sair")
-            break
-
-        else:
-            print("Opção inválida.")
-
+    print("Sistema finalizado.")
 
 if __name__ == "__main__":
     main()
