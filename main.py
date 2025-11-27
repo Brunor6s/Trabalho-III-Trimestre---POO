@@ -1,67 +1,62 @@
-# main.py
-from datetime import date
-from classes import Locador, Locatario, Imovel, Amenidade, Anuncio
+from services import criar_pessoa, listar_pessoas, criar_imovel, listar_imoveis, criar_anuncio, listar_anuncios
+
+# Menu sistema de hotel
+def menu():
+    print("\n=== Sistema de Testes ===")
+    print("1. Criar Pessoa")
+    print("2. Listar Pessoas")
+    print("3. Criar Imóvel")
+    print("4. Listar Imóveis")
+    print("5. Criar Anúncio")
+    print("6. Listar Anúncios")
+    print("0. Sair")
 
 
-#Objetos
-locador = Locador(
-    primeiro_nome="Maria",
-    sobrenome="Emelau",
-    email="emelau@gmail.com",
-    data_nascimento="10/01/1985",
-    documento="123.456.789-00",
-    id_pessoa=1,
-    data_cadastro="18/11/2024",
-    conta_bancaria="NuBank - 1234",
-    avaliacao_proprietario=5
-)
+def main():
+    while True:
+        menu()
+        opcao = input("Escolha uma opção: ")
 
-locatario = Locatario(
-    primeiro_nome="Rogerio",
-    sobrenome="Ceni",
-    email="r.ceni@example.com",
-    data_nascimento="01/05/1990",
-    documento="SP-12.345.678",
-    id_pessoa=2,
-    data_cadastro="18/11/2024",
-    preferencias="Silencioso"
-)
+        if opcao == "1":
+            nome = input("Nome da pessoa: ")
+            email = input("Email da pessoa: ")
+            criar_pessoa(nome, email)
+            print("Pessoa criada com sucesso!")
 
+        elif opcao == "2":
+            print("\n--- Lista de Pessoas ---")
+            for p in listar_pessoas():
+                print(f"ID: {p.id} | Nome: {p.nome} | Email: {p.email}")
 
-#Amenidades
-g2porta = Amenidade(id_amenidade=1, nome="Geladeira duas portas")
-ar = Amenidade(id_amenidade=2, nome="Ar-Condicionado")
+        elif opcao == "3":
+            endereco = input("Endereço do imóvel: ")
+            preco = float(input("Preço da diária: "))
+            criar_imovel(endereco, preco)
+            print("Imóvel criado com sucesso!")
 
+        elif opcao == "4":
+            print("\n--- Lista de Imóveis ---")
+            for i in listar_imoveis():
+                print(f"ID: {i.id} | Endereço: {i.endereco} | Preço: {i.preco}")
 
-# Criando imóvel
-imovel = Imovel(
-    endereco="Avenida Brasil, 100",
-    status="Disponível",
-    id_imovel=10,
-    titulo="Apartamento Centro",
-    descricao="1 quarto, sala, cozinha",
-    tipo="Apartamento",
-    area_m2=45,
-    valor_aluguel=1800
-)
+        elif opcao == "5":
+            imovel_id = int(input("ID do imóvel para anúncio: "))
+            titulo = input("Título do anúncio: ")
+            criar_anuncio(imovel_id, titulo)
+            print("Anúncio criado com sucesso!")
 
-# Relacionando amenidades
-imovel.adicionar_amenidade(g2porta)
-imovel.adicionar_amenidade(ar)
+        elif opcao == "6":
+            print("\n--- Lista de Anúncios ---")
+            for a in listar_anuncios():
+                print(f"ID: {a.id} | Título: {a.titulo} | Imóvel: {a.imovel_id}")
 
-# Criando anúncio
-anuncio = Anuncio(
-    id_anuncio=100,
-    data_publicacao="18/11/2025",
-    preco=1800,
-    disponibilidade=True,
-    imovel=imovel
-)
+        elif opcao == "0":
+            print("Sair")
+            break
+
+        else:
+            print("Opção inválida.")
 
 
-# Exibindo algumas informações
-print("Locador:", locador.exibir_informacoes())
-print("Locatário:", locatario.exibir_informacoes())
-print("Imóvel:", imovel._titulo)
-print("Amenidades:", [a._nome for a in imovel._amenidades])
-print("Anúncio criado ID:", anuncio._id_anuncio)
+if __name__ == "__main__":
+    main()
