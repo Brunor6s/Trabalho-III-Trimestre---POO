@@ -1,26 +1,32 @@
 import tkinter as tk
 from tkinter import messagebox
-from classes import Cliente, Funcionario, Quarto
-from services import ClienteService, FuncionarioService, QuartoService, ReservaService
 from datetime import date
 
-# Função auxiliar para converter datas simples
+from classes import Cliente, Funcionario, Quarto
+from services import ClienteService, FuncionarioService, QuartoService, ReservaService
+
+# Conversão de data
 def parse_data(txt):
     try:
         y, m, d = map(int, txt.split("-"))
         return date(y, m, d)
     except:
-        messagebox.showerror("Erro", "Data inválida, Use YYYY-MM-DD")
+        messagebox.showerror("Erro", "Data inválida! Use AAAA-MM-DD")
         return None
 
+# Interface Gráfica
 class InterfaceHotel:
     def __init__(self):
+        # Serviços
         self.clienteService = ClienteService()
         self.funcService = FuncionarioService()
         self.quartoService = QuartoService()
         self.reservaService = ReservaService()
 
-        # dados iniciais
+        # Login de usuário
+        self.tipo_logado = None
+
+        # Dados iniciais
         self.cliente_padrao = Cliente("Rogério", "123", "rogerio@gmail.com", 1, "1234-5678")
         self.func_padrao = Funcionario("Peter", "123", "peter@hotel.com", 1, "Recepção")
         self.clienteService.cadastrarCliente(self.cliente_padrao)
@@ -29,11 +35,11 @@ class InterfaceHotel:
         self.quartoService.adicionarQuarto(Quarto(101, "Solteiro", 150))
         self.quartoService.adicionarQuarto(Quarto(102, "Casal", 200))
 
-        # janela principal
+        # Janela inicial
         self.janela = tk.Tk()
         self.janela.title("Sistema de Hotel")
 
-        tk.Label(self.janela, text="Login (c/f/d)").pack()
+        tk.Label(self.janela, text="Login (c = cliente / f = funcionário / d = dono)").pack()
         self.usuario = tk.Entry(self.janela)
         self.usuario.pack()
 
@@ -45,10 +51,13 @@ class InterfaceHotel:
 
         self.janela.mainloop()
 
+
+    # Limpar tela
     def limpar(self):
         for widget in self.janela.winfo_children():
             widget.destroy()
 
+    # Login em si
     def login(self):
         u = self.usuario.get()
         s = self.senha.get()
@@ -60,41 +69,43 @@ class InterfaceHotel:
         }
 
         if u not in usuarios or usuarios[u]["senha"] != s:
-            messagebox.showerror("Erro", "Login inválido")
+            messagebox.showerror("Erro", "Login inválido!")
             return
 
-        tipo = usuarios[u]["tipo"]
+        self.tipo_logado = usuarios[u]["tipo"]
+
         self.limpar()
 
-        if tipo == "cliente":
+        if self.tipo_logado == "cliente":
             self.menu_cliente()
-        elif tipo == "funcionario":
+        elif self.tipo_logado == "funcionario":
             self.menu_func()
         else:
             self.menu_dono()
 
-    # Menu do cliente
+
+    # Clientes
     def menu_cliente(self):
         tk.Label(self.janela, text="Menu Cliente").pack()
+
         tk.Button(self.janela, text="Quartos Disponíveis", command=self.ver_quartos).pack(pady=4)
         tk.Button(self.janela, text="Fazer Reserva", command=self.fazer_reserva).pack(pady=4)
         tk.Button(self.janela, text="Minhas Reservas", command=self.minhas_reservas).pack(pady=4)
+
         tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
     def ver_quartos(self):
-        msg = ""
-        for q in self.quartoService.quartos:
-            msg += f"Quarto {q.numero} | Tipo: {q.tipo} | Disponível: {q.disponivel}\n"
-        messagebox.showinfo("Quartos", msg)
+        lista = self.quartoService.listarQuartos()
+        messagebox.showinfo("Quartos Disponíveis", lista)
 
     def fazer_reserva(self):
         self.limpar()
 
-        tk.Label(self.janela, text="Check-in (YYYY-MM-DD)").pack()
+        tk.Label(self.janela, text="Check-in (AAAA-MM-DD)").pack()
         ent1 = tk.Entry(self.janela)
         ent1.pack()
 
-        tk.Label(self.janela, text="Check-out (YYYY-MM-DD)").pack()
+        tk.Label(self.janela, text="Check-out (AAAA-MM-DD)").pack()
         ent2 = tk.Entry(self.janela)
         ent2.pack()
 
@@ -106,90 +117,114 @@ class InterfaceHotel:
 
             quarto = self.quartoService.buscarDisponivel()
             if not quarto:
-                messagebox.showwarning("Aviso", "Sem quartos livres!")
+                messagebox.showwarning("Aviso", "Nenhum quarto disponível!")
                 return
 
-            reserva = self.reservaService.criarReserva(1, d1, d2, self.cliente_padrao, quarto)
-            if reserva:
-                valor = reserva.calcularTotal()
-                messagebox.showinfo("OK", f"Reserva criada! Total: R$ {valor}")
-                self.menu_cliente()
+            reserva = self.reservaService.criarReserva(
+                idReserva=len(self.reservaService.reservas)+1,
+                dataEntrada=d1,
+                dataSaida=d2,
+                cliente=self.cliente_padrao,
+                quarto=quarto
+            )
 
-        tk.Button(self.janela, text="Confirmar", command=confirmar).pack()
-        tk.Button(self.janela, text="Voltar", command=self.menu_cliente).pack(pady=5)
+            messagebox.showinfo("Reserva", f"Reserva criada! Valor total: R$ {reserva.calcularTotal()}")
+            self.menu_cliente()
+
+        tk.Button(self.janela, text="Confirmar", command=confirmar).pack(pady=5)
+        tk.Button(self.janela, text="Voltar", command=self.menu_cliente).pack()
 
     def minhas_reservas(self):
-        msg = ""
+        texto = ""
         for r in self.reservaService.reservas:
             if r.cliente.nome == self.cliente_padrao.nome:
-                msg += f"Reserva {r.idReserva} - Quarto {r.quarto.numero}\n"
-        if msg == "": msg = "Nenhuma reserva encontrada."
-        messagebox.showinfo("Minhas reservas", msg)
+                texto += f"Reserva {r.idReserva} - Quarto {r.quarto.numero}\n"
 
-    # Menu do funcionário
+        if texto == "":
+            texto = "Nenhuma reserva encontrada."
+
+        messagebox.showinfo("Minhas Reservas", texto)
+
+
+    # Funcionários
     def menu_func(self):
         tk.Label(self.janela, text="Menu Funcionário").pack()
-        tk.Button(self.janela, text="Listar Reservas", command=lambda: self.msg_lista(self.reservaService.listarReservas())).pack(pady=4)
-        tk.Button(self.janela, text="Listar Quartos", command=lambda: self.msg_lista(self.quartoService.listarQuartos())).pack(pady=4)
+
+        tk.Button(self.janela, text="Listar Reservas", command=self.listar_reservas).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+
         tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
-    def msg_lista(self, texto):
-        messagebox.showinfo("Informação", texto)
+    def listar_reservas(self):
+        texto = self.reservaService.listarReservas()
+        messagebox.showinfo("Reservas", texto)
+
+    def listar_quartos(self):
+        texto = self.quartoService.listarQuartos()
+        messagebox.showinfo("Quartos", texto)
 
 
-    # Menu do dono
+    # Dono (admin)
     def menu_dono(self):
         tk.Label(self.janela, text="Menu Dono").pack()
-        tk.Button(self.janela, text="Listar Funcionários", command=lambda: self.msg_lista(self.funcService.listarFuncionarios)).pack(pady=4)
-        tk.Button(self.janela, text="Listar Quartos", command=lambda: self.msg_lista(self.quartoService.listarQuartos)).pack(pady=4)
+
+        tk.Button(self.janela, text="Cadastrar Funcionário", command=self.cadastrar_funcionario).pack(pady=4)
+        tk.Button(self.janela, text="Cadastrar Cliente", command=self.cadastrar_cliente).pack(pady=4)
+        tk.Button(self.janela, text="Listar Funcionários", command=self.listar_funcionarios).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+
         tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
+    def listar_funcionarios(self):
+        texto = self.funcService.listarFuncionarios()
+        messagebox.showinfo("Funcionários", texto)
+
+    def cadastrar_cliente(self):
+        self.limpar()
+
+        tk.Label(self.janela, text="Nome do Cliente").pack()
+        nome = tk.Entry(self.janela)
+        nome.pack()
+
+        tk.Label(self.janela, text="Email").pack()
+        email = tk.Entry(self.janela)
+        email.pack()
+
+        def salvar():
+            novo = Cliente(nome.get(), "123", email.get(), len(self.clienteService.clientes)+1, "0000")
+            self.clienteService.cadastrarCliente(novo)
+            messagebox.showinfo("OK", "Cliente cadastrado!")
+            self.menu_dono()
+
+        tk.Button(self.janela, text="Salvar", command=salvar).pack()
+        tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack()
+
+    def cadastrar_funcionario(self):
+        self.limpar()
+
+        tk.Label(self.janela, text="Nome do Funcionário").pack()
+        nome = tk.Entry(self.janela)
+        nome.pack()
+
+        tk.Label(self.janela, text="Cargo").pack()
+        cargo = tk.Entry(self.janela)
+        cargo.pack()
+
+        def salvar():
+            novo = Funcionario(nome.get(), "123", f"{nome.get()}@email.com", len(self.funcService.funcionarios)+1, cargo.get())
+            self.funcService.cadastrarFuncionario(novo)
+            messagebox.showinfo("OK", "Funcionário cadastrado!")
+            self.menu_dono()
+
+        tk.Button(self.janela, text="Salvar", command=salvar).pack()
+        tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack()
+
+
+    # Resetar interface
     def resetar(self):
         self.limpar()
         self.__init__()
 
+
 if __name__ == "__main__":
     InterfaceHotel()
-
-import tkinter as tk
-from tkinter import messagebox
-
-# Função para exibir mensagens dentro do Tkinter
-
-def mostrar_msg(msg):
-    messagebox.showinfo("Informação", msg)
-
-# Interface principal
-
-def abrir_interface(servico=None):
-    janela = tk.Tk()
-    janela.title("Sistema de Hotel - Interface")
-    janela.geometry("350x350")
-
-    tk.Label(janela, text="Sistema de Hotel", font=("Arial", 16)).pack(pady=10)
-
-    # Botão de criar reserva
-    tk.Button(
-        janela,
-        text="Realizar Reserva",
-        width=20,
-        command=lambda: mostrar_msg("Reserva realizada com sucesso!")
-    ).pack(pady=5)
-
-    # Botão de listar reservas
-    tk.Button(
-        janela,
-        text="Listar Reservas",
-        width=20,
-        command=lambda: mostrar_msg("Lista de reservas:")
-    ).pack(pady=5)
-
-    # Botão de sair
-    tk.Button(
-        janela,
-        text="Sair",
-        width=15,
-        command=janela.destroy
-    ).pack(pady=20)
-
-    janela.mainloop()
