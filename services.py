@@ -5,9 +5,11 @@ class ClienteService:
     def __init__(self):
         self.clientes = []
 
-    def cadastrarCliente(self, cliente: Cliente):
-        self.clientes.append(cliente)
-        return "Cliente cadastrado com sucesso!"
+    def cadastrar_cliente(self):
+    if self.usuario_logado["tipo"] != "dono" or "funcionario":
+        messagebox.showerror("Acesso negado", "Apenas o dono pode cadastrar clientes!")
+        return
+
 
     def listarClientes(self):
         if not self.clientes:
@@ -88,9 +90,10 @@ class FuncionarioService:
     def __init__(self):
         self.funcionarios = []
 
-    def cadastrarFuncionario(self, funcionario: Funcionario):
-        self.funcionarios.append(funcionario)
-        return "Funcionário cadastrado!"
+    def cadastrar_funcionario(self):
+    if self.usuario_logado["tipo"] != "dono":
+        messagebox.showerror("Acesso negado")
+        return
 
     def listarFuncionarios(self):
         if not self.funcionarios:
