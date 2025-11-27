@@ -21,7 +21,10 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
         op = input("Escolha: ")
 
         if op == "1":
-            serv_quarto.listarQuartos()
+            quartos = serv_quarto.listarQuartos()
+            for q in quartos:
+                status = "Livre" if q.disponivel else "Ocupado"
+                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
 
         elif op == "2":
             quarto = serv_quarto.buscarDisponivel()
@@ -39,10 +42,8 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
 
             idReserva = int(datetime.now().timestamp()) % 100000
             reserva = serv_reserva.criarReserva(idReserva, checkin, checkout, cliente, quarto)
-
-            if reserva:
-                total = reserva.calcularTotal()
-                print(f"Reserva criada. Total: R$ {total:.2f}")
+            total = reserva.calcularTotal()
+            print(f"Reserva criada. Total: R$ {total:.2f}")
 
         elif op == "3":
             print("\n--- Minhas reservas (filtrando pelo nome) ---")
@@ -70,7 +71,8 @@ def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, f
         op = input("Escolha: ")
 
         if op == "1":
-            serv_reserva.listarReservas()
+            for r in serv_reserva.reservas:
+                print(f"Reserva {r.idReserva}: Quarto {r.quarto.numero}, {r.dataCheckin} a {r.dataCheckout}, Cliente {r.cliente.nome}")
 
         elif op == "2":
             try:
@@ -88,10 +90,13 @@ def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, f
             if not alvo:
                 print("Reserva não encontrada.")
             else:
-                serv_reserva.cancelar(alvo)
+                msg = serv_reserva.cancelar(alvo)
+                print(msg)
 
         elif op == "3":
-            serv_quarto.listarQuartos()
+            for q in serv_quarto.quartos:
+                status = "Livre" if q.disponivel else "Ocupado"
+                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
 
         elif op == "4":
             try:
@@ -142,7 +147,8 @@ def menu_dono(serv_cliente: ClienteService, serv_func: FuncionarioService, serv_
             serv_func.cadastrarFuncionario(f)
 
         elif op == "2":
-            serv_func.listarFuncionarios()
+            for f in serv_func.funcionarios:
+                print(f"Funcionário {f.idFuncionario} - {f.nome} - {f.cargo}")
 
         elif op == "3":
             try:
@@ -162,13 +168,17 @@ def menu_dono(serv_cliente: ClienteService, serv_func: FuncionarioService, serv_
             serv_quarto.adicionarQuarto(q)
 
         elif op == "4":
-            serv_quarto.listarQuartos()
+            for q in serv_quarto.quartos:
+                status = "Livre" if q.disponivel else "Ocupado"
+                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
 
         elif op == "5":
-            serv_cliente.listarClientes()
+            for c in serv_cliente.clientes:
+                print(f"Cliente {c.idCliente} - {c.nome} - {c.telefone}")
 
         elif op == "6":
-            serv_reserva.listarReservas()
+            for r in serv_reserva.reservas:
+                print(f"Reserva {r.idReserva}: Quarto {r.quarto.numero} - {r.dataCheckin} a {r.dataCheckout}, Cliente {r.cliente.nome}")
 
         elif op == "0":
             break
@@ -210,14 +220,9 @@ def main():
 
     if tipo == "cliente":
         menu_cliente(serv_reserva, cliente_ex, serv_quarto)
-
     elif tipo == "funcionario":
         menu_funcionario(serv_reserva, serv_quarto, func_ex)
-
     elif tipo == "dono":
         menu_dono(serv_cliente, serv_func, serv_quarto, serv_reserva)
 
     print("Sistema finalizado.")
-
-if __name__ == "__main__":
-    main()

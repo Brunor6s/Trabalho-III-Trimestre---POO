@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date
 
-
-# Classe Abstrata Pessoa
 class Pessoa(ABC):
     def __init__(self, nome: str, documento: str, email: str):
         self.nome = nome
@@ -13,8 +11,6 @@ class Pessoa(ABC):
     def exibirDados(self):
         pass
 
-
-# Classe Cliente
 class Cliente(Pessoa):
     def __init__(self, nome, documento, email, idCliente, telefone):
         super().__init__(nome, documento, email)
@@ -31,8 +27,6 @@ class Cliente(Pessoa):
     def solicitarReserva(self):
         print("Solicitando reserva...")
 
-
-# Classe Funcionário
 class Funcionario(Pessoa):
     def __init__(self, nome, documento, email, idFuncionario, cargo):
         super().__init__(nome, documento, email)
@@ -50,8 +44,6 @@ class Funcionario(Pessoa):
         print("Quarto revisado.")
         return True
 
-
-# Classe Quarto
 class Quarto:
     def __init__(self, numero: int, tipo: str, precoDiaria: float):
         self.numero = numero
@@ -69,8 +61,6 @@ class Quarto:
         print("Quarto precisa ser revisado após checkout.")
         return True
 
-
-# Classe Reserva
 class Reserva:
     def __init__(self, idReserva: int, dataCheckin: date, dataCheckout: date, cliente: Cliente, quarto: Quarto):
         self.idReserva = idReserva
