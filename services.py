@@ -5,7 +5,7 @@ class ClienteService:
         self.clientes = []
 
     def cadastrarCliente(self, cliente: Cliente):
-        # Removido requisito de 'usuario_logado'
+        # Cadastro permitido sem verificação extra
         self.clientes.append(cliente)
         return "Cliente cadastrado com sucesso!"
 
@@ -17,7 +17,7 @@ class FuncionarioService:
         self.funcionarios = []
 
     def cadastrarFuncionario(self, funcionario: Funcionario):
-        # Removido requisito de 'usuario_logado'
+        # Cadastro permitido sem verificação extra
         self.funcionarios.append(funcionario)
         return "Funcionário cadastrado com sucesso!"
 
@@ -28,26 +28,28 @@ class QuartoService:
     def __init__(self):
         self.quartos = []
 
-    def adicionarQuarto(self, quarto: Quarto):
+    def cadastrarQuarto(self, quarto: Quarto):
         self.quartos.append(quarto)
-        return "Quarto adicionado com sucesso!"
+        return "Quarto cadastrado com sucesso!"
 
-    cadastrarQuarto = adicionarQuarto  # alias, caso o código chame por outro nome
+    def adicionarQuarto(self, quarto: Quarto):
+        # Alias para cadastrarQuarto (usado no código principal)
+        return self.cadastrarQuarto(quarto)
 
     def listarQuartos(self):
         return self.quartos
 
     def buscarDisponivel(self):
-        for quarto in self.quartos:
-            if quarto.disponivel:
-                return quarto
+        for q in self.quartos:
+            if q.disponivel:
+                return q
         return None
 
 class ReservaService:
     def __init__(self):
         self.reservas = []
 
-    def criarReserva(self, idReserva, dataEntrada, dataSaida, cliente, quarto):
+    def criarReserva(self, idReserva, dataEntrada, dataSaida, cliente: Cliente, quarto: Quarto):
         reserva = Reserva(idReserva, dataEntrada, dataSaida, cliente, quarto)
         self.reservas.append(reserva)
         return reserva
@@ -55,9 +57,9 @@ class ReservaService:
     def listarReservas(self):
         return self.reservas
 
-    def cancelar(self, reserva):
+    def cancelar(self, reserva: Reserva):
         if reserva in self.reservas:
-            reserva.cancelarReserva()  # libera o quarto
+            reserva.cancelarReserva()
             self.reservas.remove(reserva)
-            return "Reserva cancelada."
+            return "Reserva cancelada com sucesso!"
         return "Reserva não encontrada."

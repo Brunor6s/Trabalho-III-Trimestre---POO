@@ -21,10 +21,14 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
         op = input("Escolha: ")
 
         if op == "1":
-            quartos = serv_quarto.listarQuartos()
-            for q in quartos:
-                status = "Livre" if q.disponivel else "Ocupado"
-                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
+            print("\n--- QUARTOS DISPONÍVEIS ---")
+            encontrou = False
+            for q in serv_quarto.quartos:
+                if q.disponivel:
+                    print(f"Quarto {q.numero} | Tipo: {q.tipo} | Preço: R$ {q.precoDiaria:.2f}")
+                    encontrou = True
+            if not encontrou:
+                print("Nenhum quarto disponível no momento.")
 
         elif op == "2":
             quarto = serv_quarto.buscarDisponivel()
@@ -32,7 +36,7 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
                 print("Nenhum quarto disponível no momento.")
                 continue
 
-            print(f"Quarto disponível: {quarto.numero} | Tipo: {quarto.tipo} | Preço: {quarto.precoDiaria}")
+            print(f"Quarto disponível: {quarto.numero} | Tipo: {quarto.tipo} | Preço: R$ {quarto.precoDiaria:.2f}")
             checkin = ler_data("Data de check-in")
             checkout = ler_data("Data de check-out")
 
@@ -42,11 +46,13 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
 
             idReserva = int(datetime.now().timestamp()) % 100000
             reserva = serv_reserva.criarReserva(idReserva, checkin, checkout, cliente, quarto)
-            total = reserva.calcularTotal()
-            print(f"Reserva criada. Total: R$ {total:.2f}")
+
+            if reserva:
+                total = reserva.calcularTotal()
+                print(f"Reserva criada. Total: R$ {total:.2f}")
 
         elif op == "3":
-            print("\n--- Minhas reservas (filtrando pelo nome) ---")
+            print("\n--- Minhas reservas ---")
             encontrou = False
             for r in serv_reserva.reservas:
                 if r.cliente.nome == cliente.nome:
@@ -71,8 +77,12 @@ def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, f
         op = input("Escolha: ")
 
         if op == "1":
-            for r in serv_reserva.reservas:
-                print(f"Reserva {r.idReserva}: Quarto {r.quarto.numero}, {r.dataCheckin} a {r.dataCheckout}, Cliente {r.cliente.nome}")
+            print("\n--- RESERVAS ---")
+            if serv_reserva.reservas:
+                for r in serv_reserva.reservas:
+                    print(f"Reserva {r.idReserva} - Quarto {r.quarto.numero} - {r.dataCheckin} a {r.dataCheckout} - Total: R$ {r.valorTotal:.2f}")
+            else:
+                print("Não há reservas cadastradas.")
 
         elif op == "2":
             try:
@@ -90,13 +100,17 @@ def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, f
             if not alvo:
                 print("Reserva não encontrada.")
             else:
-                msg = serv_reserva.cancelar(alvo)
-                print(msg)
+                serv_reserva.cancelar(alvo)
+                print("Reserva cancelada com sucesso.")
 
         elif op == "3":
-            for q in serv_quarto.quartos:
-                status = "Livre" if q.disponivel else "Ocupado"
-                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
+            print("\n--- QUARTOS ---")
+            if serv_quarto.quartos:
+                for q in serv_quarto.quartos:
+                    status = "Disponível" if q.disponivel else "Ocupado"
+                    print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
+            else:
+                print("Nenhum quarto cadastrado.")
 
         elif op == "4":
             try:
@@ -145,10 +159,15 @@ def menu_dono(serv_cliente: ClienteService, serv_func: FuncionarioService, serv_
 
             f = Funcionario(nome, doc, email, idf, cargo)
             serv_func.cadastrarFuncionario(f)
+            print("Funcionário cadastrado com sucesso.")
 
         elif op == "2":
-            for f in serv_func.funcionarios:
-                print(f"Funcionário {f.idFuncionario} - {f.nome} - {f.cargo}")
+            print("\n--- FUNCIONÁRIOS ---")
+            if serv_func.funcionarios:
+                for f in serv_func.funcionarios:
+                    print(f"Funcionário {f.idFuncionario} - {f.nome} - {f.cargo}")
+            else:
+                print("Nenhum funcionário cadastrado.")
 
         elif op == "3":
             try:
@@ -158,7 +177,6 @@ def menu_dono(serv_cliente: ClienteService, serv_func: FuncionarioService, serv_
                 continue
 
             tipo = input("Tipo do quarto: ")
-
             try:
                 preco = float(input("Preço da diária: "))
             except:
@@ -166,19 +184,32 @@ def menu_dono(serv_cliente: ClienteService, serv_func: FuncionarioService, serv_
 
             q = Quarto(numero, tipo, preco)
             serv_quarto.adicionarQuarto(q)
+            print("Quarto adicionado com sucesso.")
 
         elif op == "4":
-            for q in serv_quarto.quartos:
-                status = "Livre" if q.disponivel else "Ocupado"
-                print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
+            print("\n--- QUARTOS ---")
+            if serv_quarto.quartos:
+                for q in serv_quarto.quartos:
+                    status = "Disponível" if q.disponivel else "Ocupado"
+                    print(f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}")
+            else:
+                print("Nenhum quarto cadastrado.")
 
         elif op == "5":
-            for c in serv_cliente.clientes:
-                print(f"Cliente {c.idCliente} - {c.nome} - {c.telefone}")
+            print("\n--- CLIENTES ---")
+            if serv_cliente.clientes:
+                for c in serv_cliente.clientes:
+                    print(f"Cliente {c.idCliente} - {c.nome} - {c.telefone}")
+            else:
+                print("Nenhum cliente cadastrado.")
 
         elif op == "6":
-            for r in serv_reserva.reservas:
-                print(f"Reserva {r.idReserva}: Quarto {r.quarto.numero} - {r.dataCheckin} a {r.dataCheckout}, Cliente {r.cliente.nome}")
+            print("\n--- RESERVAS ---")
+            if serv_reserva.reservas:
+                for r in serv_reserva.reservas:
+                    print(f"Reserva {r.idReserva} - Quarto {r.quarto.numero} - {r.dataCheckin} a {r.dataCheckout} - Total: R$ {r.valorTotal:.2f}")
+            else:
+                print("Nenhuma reserva cadastrada.")
 
         elif op == "0":
             break
@@ -226,3 +257,6 @@ def main():
         menu_dono(serv_cliente, serv_func, serv_quarto, serv_reserva)
 
     print("Sistema finalizado.")
+
+if __name__ == "__main__":
+    main()
