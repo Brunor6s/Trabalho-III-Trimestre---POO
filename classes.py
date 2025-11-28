@@ -12,6 +12,10 @@ class Pessoa(ABC):
     def exibirDados(self):
         pass
 
+    def __str__(self):
+        return f"{self.nome} - {self.documento} - {self.email}"
+
+
 # Classe Cliente
 class Cliente(Pessoa):
     def __init__(self, nome, documento, email, idCliente, telefone):
@@ -28,6 +32,10 @@ class Cliente(Pessoa):
 
     def solicitarReserva(self):
         print("Solicitando reserva...")
+
+    def __str__(self):
+        return f"Cliente {self.idCliente} - {self.nome} | {self.documento} | {self.email} | {self.telefone}"
+
 
 # Classe Funcionário
 class Funcionario(Pessoa):
@@ -47,6 +55,10 @@ class Funcionario(Pessoa):
         print("Quarto revisado.")
         return True
 
+    def __str__(self):
+        return f"Funcionario {self.idFuncionario} - {self.nome} | {self.cargo} | {self.documento} | {self.email}"
+
+
 # Classe Quarto
 class Quarto:
     def __init__(self, numero: int, tipo: str, precoDiaria: float):
@@ -65,9 +77,18 @@ class Quarto:
         print("Quarto precisa ser revisado após checkout.")
         return True
 
+    def __str__(self):
+        status = "Disponível" if self.disponivel else "Ocupado"
+        return f"Quarto {self.numero} - {self.tipo} - R$ {self.precoDiaria:.2f} - {status}"
+
+
 # Classe Reserva
 class Reserva:
     def __init__(self, idReserva: int, dataCheckin: date, dataCheckout: date, cliente: Cliente, quarto: Quarto):
+        # validação de datas
+        if dataCheckout <= dataCheckin:
+            raise ValueError("Data de check-out deve ser posterior à data de check-in.")
+
         self.idReserva = idReserva
         self.dataCheckin = dataCheckin
         self.dataCheckout = dataCheckout
@@ -93,3 +114,6 @@ class Reserva:
         print("Reserva cancelada.")
         self.quarto.liberarQuarto()
         return True
+
+    def __str__(self):
+        return f"Reserva {self.idReserva} - Cliente: {self.cliente.nome} - Quarto: {self.quarto.numero} - {self.dataCheckin} -> {self.dataCheckout} - Total: R$ {self.valorTotal:.2f}"
