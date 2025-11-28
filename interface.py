@@ -1,258 +1,238 @@
 import tkinter as tk
 from tkinter import messagebox
-from datetime import date
 
-from classes import Cliente, Funcionario, Quarto
-from services import ClienteService, FuncionarioService, QuartoService, ReservaService
+class Interface:
 
-# Conversão de data
-def parse_data(txt):
-    try:
-        y, m, d = map(int, txt.split("-"))
-        return date(y, m, d)
-    except:
-        messagebox.showerror("Erro", "Data inválida! Use AAAA-MM-DD")
-        return None
+    def __init__(self, serv_cliente, serv_funcionario, serv_quarto):
+        self.clienteService = serv_cliente
+        self.funcService = serv_funcionario
+        self.quartoService = serv_quarto
+        self.usuario_logado = None
 
-# Interface Gráfica
-class InterfaceHotel:
-    def __init__(self):
-        # Serviços
-        self.clienteService = ClienteService()
-        self.funcService = FuncionarioService()
-        self.quartoService = QuartoService()
-        self.reservaService = ReservaService()
-
-        # Login de usuário
-        self.tipo_logado = None
-
-        # Dados iniciais
-        self.cliente_padrao = Cliente("Rogério", "123", "rogerio@gmail.com", 1, "1234-5678")
-        self.func_padrao = Funcionario("Peter", "123", "peter@hotel.com", 1, "Recepção")
-        self.clienteService.cadastrarCliente(self.cliente_padrao)
-        self.funcService.cadastrarFuncionario(self.func_padrao)
-
-        self.quartoService.adicionarQuarto(Quarto(101, "Solteiro", 150))
-        self.quartoService.adicionarQuarto(Quarto(102, "Casal", 200))
-
-        # Janela inicial
         self.janela = tk.Tk()
         self.janela.title("Sistema de Hotel")
+        self.janela.geometry("400x400")
 
-        tk.Label(self.janela, text="Login (c = cliente / f = funcionário / d = dono)").pack()
-        self.usuario = tk.Entry(self.janela)
-        self.usuario.pack()
-
-        tk.Label(self.janela, text="Senha").pack()
-        self.senha = tk.Entry(self.janela, show="*")
-        self.senha.pack()
-
-        tk.Button(self.janela, text="Entrar", command=self.login).pack(pady=10)
-
-        self.janela.mainloop()
-
-    # Limpar tela
-    def limpar(self):
+    # ===============================
+    # CONTROLADOR DE TELA
+    # ===============================
+    def limpar_tela(self):
         for widget in self.janela.winfo_children():
             widget.destroy()
 
-    # Login em si
-    def login(self):
-        u = self.usuario.get()
-        s = self.senha.get()
+    # ===============================
+    # TELA LOGIN
+    # ===============================
+    def tela_login(self):
+        self.limpar_tela()
 
-        usuarios = {
-            "c": {"senha": "123", "tipo": "cliente"},
-            "f": {"senha": "123", "tipo": "funcionario"},
-            "d": {"senha": "123", "tipo": "dono"},
-        }
+        tk.Label(self.janela, text="Login", font=("Arial", 16)).pack(pady=10)
 
-        if u not in usuarios or usuarios[u]["senha"] != s:
-            messagebox.showerror("Erro", "Login inválido!")
-            return
-
-        self.tipo_logado = usuarios[u]["tipo"]
-        self.limpar()
-
-        if self.tipo_logado == "cliente":
-            self.menu_cliente()
-        elif self.tipo_logado == "funcionario":
-            self.menu_func()
-        else:
-            self.menu_dono()
-
-    # Clientes
-    def menu_cliente(self):
-        tk.Label(self.janela, text="Menu Cliente").pack()
-
-        tk.Button(self.janela, text="Quartos Disponíveis", command=self.ver_quartos).pack(pady=4)
-        tk.Button(self.janela, text="Fazer Reserva", command=self.fazer_reserva).pack(pady=4)
-        tk.Button(self.janela, text="Minhas Reservas", command=self.minhas_reservas).pack(pady=4)
-        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
-
-    def ver_quartos(self):
-        texto = ""
-        for q in self.quartoService.quartos:
-            if q.disponivel:
-                texto += f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f}\n"
-        if not texto:
-            texto = "Nenhum quarto disponível."
-        messagebox.showinfo("Quartos Disponíveis", texto)
-
-    def fazer_reserva(self):
-        self.limpar()
-
-        tk.Label(self.janela, text="Check-in (AAAA-MM-DD)").pack()
-        ent1 = tk.Entry(self.janela)
-        ent1.pack()
-
-        tk.Label(self.janela, text="Check-out (AAAA-MM-DD)").pack()
-        ent2 = tk.Entry(self.janela)
-        ent2.pack()
-
-        def confirmar():
-            d1 = parse_data(ent1.get())
-            d2 = parse_data(ent2.get())
-            if not d1 or not d2:
-                return
-
-            quarto = self.quartoService.buscarDisponivel()
-            if not quarto:
-                messagebox.showwarning("Aviso", "Nenhum quarto disponível!")
-                return
-
-            reserva = self.reservaService.criarReserva(
-                idReserva=len(self.reservaService.reservas)+1,
-                dataEntrada=d1,
-                dataSaida=d2,
-                cliente=self.cliente_padrao,
-                quarto=quarto
-            )
-            total = reserva.calcularTotal()
-            messagebox.showinfo("Reserva", f"Reserva criada! Valor total: R$ {total:.2f}")
-            self.menu_cliente()
-
-        tk.Button(self.janela, text="Confirmar", command=confirmar).pack(pady=5)
-        tk.Button(self.janela, text="Voltar", command=self.menu_cliente).pack()
-
-    def minhas_reservas(self):
-        texto = ""
-        for r in self.reservaService.reservas:
-            if r.cliente.nome == self.cliente_padrao.nome:
-                texto += f"Reserva {r.idReserva} - Quarto {r.quarto.numero}\n"
-        if not texto:
-            texto = "Nenhuma reserva encontrada."
-        messagebox.showinfo("Minhas Reservas", texto)
-
-    # Funcionários
-    def menu_func(self):
-        tk.Label(self.janela, text="Menu Funcionário").pack()
-
-        tk.Button(self.janela, text="Listar Reservas", command=self.listar_reservas).pack(pady=4)
-        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
-        tk.Button(self.janela, text="Cadastrar Cliente", command=self.cadastrar_cliente_func).pack(pady=4)
-        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
-
-    def listar_reservas(self):
-        texto = ""
-        for r in self.reservaService.reservas:
-            texto += f"Reserva {r.idReserva} - Quarto {r.quarto.numero} - {r.dataCheckin} a {r.dataCheckout} - Total: R$ {r.valorTotal:.2f}\n"
-        if not texto:
-            texto = "Nenhuma reserva encontrada."
-        messagebox.showinfo("Reservas", texto)
-
-    def listar_quartos(self):
-        texto = ""
-        for q in self.quartoService.quartos:
-            status = "Disponível" if q.disponivel else "Ocupado"
-            texto += f"Quarto {q.numero} - {q.tipo} - R$ {q.precoDiaria:.2f} - {status}\n"
-        if not texto:
-            texto = "Nenhum quarto cadastrado."
-        messagebox.showinfo("Quartos", texto)
-
-    def cadastrar_cliente_func(self):
-    self.limpar()
-
-    tk.Label(self.janela, text="Nome do Cliente").pack()
-    nome = tk.Entry(self.janela)
-    nome.pack()
-
-    tk.Label(self.janela, text="Email").pack()
-    email = tk.Entry(self.janela)
-    email.pack()
-
-    def salvar():
-        novo = Cliente(nome.get(), "123", email.get(), len(self.clienteService.clientes)+1, "0000")
-        self.clienteService.cadastrarCliente(novo, autor="funcionario")
-        messagebox.showinfo("OK", "Cliente cadastrado pelo funcionário!")
-        self.menu_func()
-
-    tk.Button(self.janela, text="Salvar", command=salvar).pack()
-    tk.Button(self.janela, text="Voltar", command=self.menu_func).pack()
-
-
-    # Dono (admin)
-    def menu_dono(self):
-        tk.Label(self.janela, text="Menu Dono").pack()
-
-        tk.Button(self.janela, text="Cadastrar Funcionário", command=self.cadastrar_funcionario).pack(pady=4)
-        tk.Button(self.janela, text="Cadastrar Cliente", command=self.cadastrar_cliente).pack(pady=4)
-        tk.Button(self.janela, text="Listar Funcionários", command=self.listar_funcionarios).pack(pady=4)
-        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
-        tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
-
-    def listar_funcionarios(self):
-        texto = ""
-        for f in self.funcService.funcionarios:
-            texto += f"Funcionário {f.idFuncionario} - {f.nome} - {f.cargo}\n"
-        if not texto:
-            texto = "Nenhum funcionário cadastrado."
-        messagebox.showinfo("Funcionários", texto)
-
-    def cadastrar_cliente(self):
-        self.limpar()
-
-        tk.Label(self.janela, text="Nome do Cliente").pack()
-        nome = tk.Entry(self.janela)
-        nome.pack()
-
-        tk.Label(self.janela, text="Email").pack()
+        tk.Label(self.janela, text="Email:").pack()
         email = tk.Entry(self.janela)
         email.pack()
 
-        def salvar():
-            novo = Cliente(nome.get(), "123", email.get(), len(self.clienteService.clientes)+1, "0000")
-            self.clienteService.cadastrarCliente(novo)
-            messagebox.showinfo("OK", "Cliente cadastrado!")
-            self.menu_dono()
+        tk.Label(self.janela, text="Senha:").pack()
+        senha = tk.Entry(self.janela, show="*")
+        senha.pack()
 
-        tk.Button(self.janela, text="Salvar", command=salvar).pack()
-        tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack()
+        def entrar():
+            em = email.get()
+            pw = senha.get()
+            usuario = None
 
-    def cadastrar_funcionario(self):
-        self.limpar()
+            # DONO fixo
+            if em == "dono" and pw == "123":
+                usuario = {"tipo": "dono", "nome": "Dono"}
 
-        tk.Label(self.janela, text="Nome do Funcionário").pack()
+            # FUNCIONÁRIO
+            for f in self.funcService.funcionarios:
+                if f.email == em and f.senha == pw:
+                    usuario = {"tipo": "func", "nome": f.nome}
+
+            # CLIENTE
+            for c in self.clienteService.clientes:
+                if c.email == em and c.senha == pw:
+                    usuario = {"tipo": "cliente", "nome": c.nome}
+
+            if usuario:
+                self.usuario_logado = usuario
+                if usuario["tipo"] == "dono":
+                    self.menu_dono()
+                elif usuario["tipo"] == "func":
+                    self.menu_func()
+                else:
+                    self.menu_cliente()
+            else:
+                messagebox.showerror("Erro", "Credenciais inválidas.")
+
+        tk.Button(self.janela, text="Entrar", command=entrar).pack(pady=10)
+
+    # ===============================
+    # MENUS
+    # ===============================
+    def menu_dono(self):
+        self.limpar_tela()
+        tk.Label(self.janela, text="Menu Dono", font=("Arial", 16)).pack(pady=10)
+
+        tk.Button(self.janela, text="Cadastrar Cliente", command=self.tela_cadastrar_cliente).pack(pady=4)
+        tk.Button(self.janela, text="Cadastrar Funcionário", command=self.tela_cadastrar_funcionario).pack(pady=4)
+        tk.Button(self.janela, text="Cadastrar Quarto", command=self.tela_cadastrar_quarto).pack(pady=4)
+
+        tk.Button(self.janela, text="Listar Clientes", command=self.listar_clientes).pack(pady=4)
+        tk.Button(self.janela, text="Listar Funcionários", command=self.listar_funcionarios).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+
+        tk.Button(self.janela, text="Sair", command=self.tela_login).pack(pady=10)
+
+    def menu_func(self):
+        self.limpar_tela()
+        tk.Label(self.janela, text="Menu Funcionário", font=("Arial", 16)).pack(pady=10)
+
+        tk.Button(self.janela, text="Cadastrar Cliente", command=self.tela_cadastrar_cliente).pack(pady=4)
+        tk.Button(self.janela, text="Listar Clientes", command=self.listar_clientes).pack(pady=4)
+        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+
+        tk.Button(self.janela, text="Sair", command=self.tela_login).pack(pady=10)
+
+    def menu_cliente(self):
+        self.limpar_tela()
+        tk.Label(self.janela, text="Menu Cliente", font=("Arial", 16)).pack(pady=10)
+
+        tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+
+        tk.Button(self.janela, text="Sair", command=self.tela_login).pack(pady=10)
+
+    # ===============================
+    # CADASTRAR CLIENTE
+    # ===============================
+    def tela_cadastrar_cliente(self):
+        self.limpar_tela()
+
+        tk.Label(self.janela, text="Cadastrar Cliente", font=("Arial", 16)).pack(pady=10)
+
+        tk.Label(self.janela, text="Nome:").pack()
         nome = tk.Entry(self.janela)
         nome.pack()
 
-        tk.Label(self.janela, text="Cargo").pack()
-        cargo = tk.Entry(self.janela)
-        cargo.pack()
+        tk.Label(self.janela, text="Email:").pack()
+        email = tk.Entry(self.janela)
+        email.pack()
+
+        tk.Label(self.janela, text="Senha:").pack()
+        senha = tk.Entry(self.janela, show="*")
+        senha.pack()
+
+        tk.Label(self.janela, text="CPF (11 dígitos):").pack()
+        cpf = tk.Entry(self.janela)
+        cpf.pack()
 
         def salvar():
-            novo = Funcionario(nome.get(), "123", f"{nome.get()}@email.com", len(self.funcService.funcionarios)+1, cargo.get())
-            self.funcService.cadastrarFuncionario(novo)
+            if len(cpf.get()) != 11:
+                messagebox.showerror("Erro", "CPF deve ter 11 dígitos.")
+                return
+
+            novo = self.clienteService.criar(nome.get(), cpf.get(), email.get(), senha.get())
+            messagebox.showinfo("OK", "Cliente cadastrado!")
+
+            if self.usuario_logado["tipo"] == "dono":
+                self.menu_dono()
+            else:
+                self.menu_func()
+
+        tk.Button(self.janela, text="Salvar", command=salvar).pack(pady=10)
+        tk.Button(self.janela, text="Voltar", command=self.menu_dono if self.usuario_logado["tipo"]=="dono" else self.menu_func).pack()
+
+    # ===============================
+    # CADASTRAR FUNCIONÁRIO
+    # ===============================
+    def tela_cadastrar_funcionario(self):
+        self.limpar_tela()
+
+        tk.Label(self.janela, text="Cadastrar Funcionário", font=("Arial", 16)).pack(pady=10)
+
+        tk.Label(self.janela, text="Nome:").pack()
+        nome = tk.Entry(self.janela)
+        nome.pack()
+
+        tk.Label(self.janela, text="Email:").pack()
+        email = tk.Entry(self.janela)
+        email.pack()
+
+        tk.Label(self.janela, text="Senha:").pack()
+        senha = tk.Entry(self.janela, show="*")
+        senha.pack()
+
+        def salvar():
+            self.funcService.criar(nome.get(), email.get(), senha.get())
             messagebox.showinfo("OK", "Funcionário cadastrado!")
             self.menu_dono()
 
-        tk.Button(self.janela, text="Salvar", command=salvar).pack()
+        tk.Button(self.janela, text="Salvar", command=salvar).pack(pady=10)
         tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack()
 
-    # Resetar interface
-    def resetar(self):
-        self.limpar()
-        self.__init__()
+    # ===============================
+    # CADASTRAR QUARTO
+    # ===============================
+    def tela_cadastrar_quarto(self):
+        self.limpar_tela()
 
-if __name__ == "__main__":
-    InterfaceHotel()
+        tk.Label(self.janela, text="Cadastrar Quarto", font=("Arial", 16)).pack(pady=10)
+
+        tk.Label(self.janela, text="Número do Quarto:").pack()
+        numero = tk.Entry(self.janela)
+        numero.pack()
+
+        tk.Label(self.janela, text="Preço:").pack()
+        preco = tk.Entry(self.janela)
+        preco.pack()
+
+        def salvar():
+            self.quartoService.criar(numero.get(), preco.get())
+            messagebox.showinfo("OK", "Quarto cadastrado!")
+            self.menu_dono()
+
+        tk.Button(self.janela, text="Salvar", command=salvar).pack(pady=10)
+        tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack()
+
+    # ===============================
+    # LISTAGENS
+    # ===============================
+    def listar_clientes(self):
+        self.limpar_tela()
+
+        tk.Label(self.janela, text="Clientes", font=("Arial", 16)).pack(pady=10)
+
+        for c in self.clienteService.clientes:
+            tk.Label(self.janela, text=f"{c.nome} - {c.email} - CPF: {c.cpf}").pack()
+
+        tk.Button(self.janela, text="Voltar",
+                  command=self.menu_dono if self.usuario_logado["tipo"]=="dono" else self.menu_func).pack(pady=10)
+
+    def listar_funcionarios(self):
+        self.limpar_tela()
+
+        tk.Label(self.janela, text="Funcionários", font=("Arial", 16)).pack(pady=10)
+
+        for f in self.funcService.funcionarios:
+            tk.Label(self.janela, text=f"{f.nome} - {f.email}").pack()
+
+        tk.Button(self.janela, text="Voltar", command=self.menu_dono).pack(pady=10)
+
+    def listar_quartos(self):
+        self.limpar_tela()
+
+        tk.Label(self.janela, text="Quartos", font=("Arial", 16)).pack(pady=10)
+
+        for q in self.quartoService.quartos:
+            tk.Label(self.janela, text=f"Quarto {q.numero} - R$ {q.preco}").pack()
+
+        tk.Button(self.janela, text="Voltar",
+                  command=self.menu_dono if self.usuario_logado["tipo"]=="dono" else self.menu_func).pack(pady=10)
+
+    # ===============================
+    # EXECUTAR
+    # ===============================
+    def run(self):
+        self.tela_login()
+        self.janela.mainloop()

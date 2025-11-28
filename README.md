@@ -10,4 +10,4 @@ Este projeto é um sistema de gerenciamento de hotel desenvolvido em Python, usa
 
 O projeto permite que um cliente visualize quartos disponíveis e faça reservas, que um funcionário gerencie reservas e quartos além de cadastro de clientes, e que o dono do hotel cadastre funcionários/quartos e visualize informações gerais.
 
-Código pode ser rodado tanto no main.py (terminal), quanto no interface.py paralelo com Tkinter
+Código deve ser rodado no interface.py devido a unificação do código
