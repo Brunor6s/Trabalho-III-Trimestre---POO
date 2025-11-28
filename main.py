@@ -66,15 +66,16 @@ def menu_cliente(serv_reserva: ReservaService, cliente: Cliente, serv_quarto: Qu
         else:
             print("Opção inválida.")
 
-def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, funcionario: Funcionario):
+def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, funcionario: Funcionario, serv_cliente: ClienteService):
     while True:
         print("\n--- MENU FUNCIONÁRIO ---")
         print("1. Listar reservas")
         print("2. Cancelar reserva (por id)")
         print("3. Listar quartos")
         print("4. Marcar quarto como liberado")
+        print("5. Cadastrar cliente")  
         print("0. Logout")
-        op = input("Escolha: ")
+
 
         if op == "1":
             print("\n--- RESERVAS ---")
