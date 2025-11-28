@@ -1,24 +1,13 @@
-# Trabalho-III-Trimestre---POO
-Sistema de plataforma de aluguel de imóveis
+# Sistema de Hotel (POO)
 
-classes.py  -- classes usadas para inserção de dados
-criação de instancia de objetos
+Este projeto é um sistema de gerenciamento de hotel desenvolvido em Python, usando programação orientada a objetos e Tkinter para interface gráfica. 
 
+**Arquivos principais:**
+- *classes.py*: definição das classes principais (Pessoa, Cliente, Funcionario, Quarto, Reserva).
+- *services.py*: serviços que gerenciam listas de clientes, funcionários, quartos e reservas.
+- *main.py*: interface de texto (console) para interagir com o sistema.
+- *interface.py*: interface gráfica usando Tkinter.
 
-teste.py    -- teste das regras e serviços
-teste variados
+O projeto permite que um cliente visualize quartos disponíveis e faça reservas, que um funcionário gerencie reservas e quartos além de cadastro de clientes, e que o dono do hotel cadastre funcionários/quartos e visualize informações gerais.
 
-
-services.py -- criação de metodos e funções
-usadas no main para gerenciamento
-
-
-
-tasks:
-criar classes e funções 
-criar services
-arrumar main
-
------ linkar tudo para o main
-
-fazer teste
+Código pode ser rodado tanto no main.py (terminal), quanto no interface.py paralelo com Tkinter
