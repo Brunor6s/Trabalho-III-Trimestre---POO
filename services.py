@@ -4,10 +4,19 @@ class ClienteService:
     def __init__(self):
         self.clientes = []
 
-    def cadastrarCliente(self, cliente: Cliente):
-        # Cadastro permitido sem verificação extra
+    class ClienteService:
+    def __init__(self):
+        self.clientes = []
+
+    def cadastrarCliente(self, cliente: Cliente, autor="dono"):
+        if autor not in ["dono", "funcionario"]:
+            raise PermissionError("Apenas DONO ou FUNCIONÁRIO podem cadastrar clientes.")
+
         self.clientes.append(cliente)
         return "Cliente cadastrado com sucesso!"
+
+    def listarClientes(self):
+        return self.clientes
 
     def listarClientes(self):
         return self.clientes

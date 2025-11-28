@@ -150,6 +150,7 @@ class InterfaceHotel:
 
         tk.Button(self.janela, text="Listar Reservas", command=self.listar_reservas).pack(pady=4)
         tk.Button(self.janela, text="Listar Quartos", command=self.listar_quartos).pack(pady=4)
+        tk.Button(self.janela, text="Cadastrar Cliente", command=self.cadastrar_cliente_func).pack(pady=4)
         tk.Button(self.janela, text="Logout", command=self.resetar).pack(pady=4)
 
     def listar_reservas(self):
@@ -168,6 +169,27 @@ class InterfaceHotel:
         if not texto:
             texto = "Nenhum quarto cadastrado."
         messagebox.showinfo("Quartos", texto)
+
+    def cadastrar_cliente_func(self):
+    self.limpar()
+
+    tk.Label(self.janela, text="Nome do Cliente").pack()
+    nome = tk.Entry(self.janela)
+    nome.pack()
+
+    tk.Label(self.janela, text="Email").pack()
+    email = tk.Entry(self.janela)
+    email.pack()
+
+    def salvar():
+        novo = Cliente(nome.get(), "123", email.get(), len(self.clienteService.clientes)+1, "0000")
+        self.clienteService.cadastrarCliente(novo, autor="funcionario")
+        messagebox.showinfo("OK", "Cliente cadastrado pelo funcionário!")
+        self.menu_func()
+
+    tk.Button(self.janela, text="Salvar", command=salvar).pack()
+    tk.Button(self.janela, text="Voltar", command=self.menu_func).pack()
+
 
     # Dono (admin)
     def menu_dono(self):

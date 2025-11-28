@@ -120,7 +120,21 @@ def menu_funcionario(serv_reserva: ReservaService, serv_quarto: QuartoService, f
                 print("Número inválido.")
                 continue
 
-            achou = False
+        elif op == "5":
+            nome = input("Nome do cliente: ")
+            doc = input("Documento: ")
+            email = input("Email: ")
+            try:
+                idc = int(input("ID do cliente: "))
+            except:
+                idc = len(serv_cliente.clientes) + 1
+            tel = input("Telefone: ")
+
+            novo = Cliente(nome, doc, email, idc, tel)
+            serv_cliente.cadastrarCliente(novo, autor="funcionario")
+            print("Cliente cadastrado pelo funcionário.")
+
+
             for q in serv_quarto.quartos:
                 if q.numero == num:
                     q.liberarQuarto()
@@ -253,7 +267,7 @@ def main():
     if tipo == "cliente":
         menu_cliente(serv_reserva, cliente_ex, serv_quarto)
     elif tipo == "funcionario":
-        menu_funcionario(serv_reserva, serv_quarto, func_ex)
+        menu_funcionario(serv_reserva, serv_quarto, func_ex, serv_cliente)
     elif tipo == "dono":
         menu_dono(serv_cliente, serv_func, serv_quarto, serv_reserva)
 
