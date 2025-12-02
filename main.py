@@ -15,13 +15,13 @@ serv_quarto = QuartoService()
 serv_reserva = ReservaService()
 
 # Criando exemplo de cliente (com senha)
-cliente_ex = Cliente(nome="Jordan Kuhn", documento="46268977033", email="jordankuhn@gmail.com", 
-                    telefone="(49) 98424-1273", senha="tornozelo")
+cliente_ex = Cliente(nome="João Silva", documento="12345678900", email="joao@gmail.com", 
+                    telefone="(11) 9999-9999", senha="123")
 serv_cliente.cadastrarCliente(cliente_ex, autor="dono")
 
 # Criando exemplo de funcionário (com senha)
-func_ex = Funcionario(nome="Bruno Reis", documento="09911893022", email="bruno.reis@habbo.com", 
-                     cargo="Recepção", senha="goleiro")
+func_ex = Funcionario(nome="Pedro Santos", documento="98765432100", email="pedro@hotel.com", 
+                     cargo="Recepção", senha="123")
 serv_func.cadastrarFuncionario(func_ex, autor="dono")
 
 # Criando exemplo de quartos
