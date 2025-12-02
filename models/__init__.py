@@ -1,10 +1,11 @@
 """
-Módulo interface - Interface gráfica moderna do sistema de hotel.
-
-Este pacote contém todos os componentes da interface gráfica desenvolvida
-com Tkinter, incluindo telas de login e interfaces específicas para cada tipo de usuário.
+Módulo models - Contém todas as classes de modelo do sistema de reservas de hotel.
 """
 
-from .app import HotelApp
+from .pessoa import Pessoa
+from .cliente import Cliente
+from .funcionario import Funcionario
+from .quarto import Quarto
+from .reserva import Reserva
 
-__all__ = ['HotelApp']
+__all__ = ['Pessoa', 'Cliente', 'Funcionario', 'Quarto', 'Reserva']
