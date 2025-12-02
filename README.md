@@ -50,8 +50,8 @@ Trabalho-III-Trimestre---POO/
 ├── README.md                    # 📖 Documentação (este arquivo)
 │
 └── diagramas/                   # 📊 Diagramas UML
-    ├── caso_uso.jpg            # Diagrama de casos de uso
-    └── classes.jpeg            # Diagrama de classes
+    ├── caso_uso.png             # Diagrama de casos de uso
+    └── classes.png              # Diagrama de classes
 ```
 
 ---
