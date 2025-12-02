@@ -19,7 +19,7 @@ def testar_cliente():
     try:
         # Teste 1: Cliente válido
         cliente = Cliente(
-            nome="Maria Silva",
+            nome="Maria Jobim",
             documento="12345678901",
             email="maria@email.com",
             telefone="(11) 98765-4321",
@@ -37,7 +37,7 @@ def testar_cliente():
         
         # Teste 3: Validação de email
         try:
-            cliente2 = Cliente("João", "98765432100", "email_invalido", "(11) 99999-9999", "123")
+            cliente2 = Cliente("Jordan", "98765432100", "email_invalido", "(11) 99999-9999", "123")
             print("✗ ERRO: Email inválido deveria falhar")
         except ValueError as e:
             print(f"✓ Validação de email funcionando: {e}")
@@ -58,9 +58,9 @@ def testar_funcionario():
     try:
         # Teste 1: Funcionário válido
         func = Funcionario(
-            nome="Maurício de Souza",
+            nome="Nicole Bet",
             documento="11122233344",
-            email="mauricio@hotel.com",
+            email="Nicole@hotel.com",
             cargo="Recepcionista",
             senha="func123"
         )
@@ -129,7 +129,7 @@ def testar_reserva():
     
     try:
         # Criar objetos necessários
-        cliente = Cliente("Ana Costa", "55566677788", "ana@email.com", "(11) 91111-2222", "ana123")
+        cliente = Cliente("Bruno Reis", "55566677788", "Bruno@email.com", "(11) 91111-2222", "Bruno321")
         quarto = Quarto(numero=201, tipo="Suite", precoDiaria=350.0)
         
         hoje = date.today()
@@ -190,18 +190,18 @@ def testar_services():
         reserva_service = ReservaService()
         
         # Teste ClienteService
-        cliente1 = cliente_service.criar("Roberto Lima", "11111111111", "roberto@email.com", "senha1", "(11) 99999-8888")
+        cliente1 = cliente_service.criar("Jessica Rubas", "11111111111", "Jessica@email.com", "senha1", "(11) 99999-8888")
         print(f"✓ Cliente cadastrado via service: {cliente1.nome}")
         
         # Teste duplicação de CPF
         try:
-            cliente_service.criar("Darlan Romani", "11111111111", "darlanromani@email.com", "senha2")
+            cliente_service.criar("Vinicius", "11111111111", "outro@email.com", "senha2")
             print("✗ ERRO: CPF duplicado deveria falhar")
         except ValueError as e:
             print(f"✓ Validação de CPF duplicado funcionando: {e}")
         
         # Teste FuncionarioService
-        func1 = func_service.criar("Julia Oliveira", "julia@hotel.com", "julia123", "22222222222", "Gerente")
+        func1 = func_service.criar("Gabriel", "Gabriel@hotel.com", "Gabriel123", "22222222222", "Gerente")
         print(f"✓ Funcionário cadastrado via service: {func1.nome}")
         
         # Teste permissão (somente dono pode cadastrar funcionário)
