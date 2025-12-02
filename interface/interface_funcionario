@@ -1,0 +1,282 @@
+"""
+Módulo interface_funcionario - Interface específica para Funcionários.
+
+Implementa as funcionalidades disponíveis para funcionários do hotel.
+"""
+
+import tkinter as tk
+from .base_interface import BaseInterface
+from .componentes import (FormularioBase, TabelaModerna, criar_titulo_pagina,
+                          mostrar_mensagem_sucesso, mostrar_mensagem_erro, confirmar_acao)
+from . import cores
+
+
+class InterfaceFuncionario(BaseInterface):
+    """Interface para Funcionários do hotel."""
+    
+    def __init__(self, janela, usuario, services, on_logout):
+        """
+        Inicializa a interface do funcionário.
+        
+        Args:
+            janela: Janela principal
+            usuario: Dados do usuário logado
+            services: Dicionário com todos os services
+            on_logout: Callback de logout
+        """
+        self.services = services
+        super().__init__(janela, usuario, on_logout)
+        
+        # Criar botões do menu
+        self._criar_menu()
+        
+        # Mostrar dashboard inicial
+        self.mostrar_dashboard()
+    
+    def _criar_menu(self):
+        """Cria os botões de navegação do menu."""
+        self.adicionar_botao_menu("Dashboard", "📊", self.mostrar_dashboard)
+        self.adicionar_botao_menu("Cadastrar Cliente", "👤", self.mostrar_cadastro_cliente)
+        self.adicionar_botao_menu("Listar Clientes", "📋", self.mostrar_lista_clientes)
+        self.adicionar_botao_menu("Listar Quartos", "🛏️", self.mostrar_lista_quartos)
+        self.adicionar_botao_menu("Reservas", "📅", self.mostrar_reservas)
+    
+    def mostrar_dashboard(self):
+        """Exibe dashboard com informações resumidas."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Dashboard", "Visão geral")
+        
+        # Container para cards
+        cards_frame = tk.Frame(self.conteudo_frame, bg=cores.FUNDO_CLARO)
+        cards_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Calcular estatísticas
+        total_clientes = len(self.services['cliente'].clientes)
+        quartos_disponiveis = len([q for q in self.services['quarto'].quartos if q.disponivel])
+        total_reservas = len(self.services['reserva'].reservas)
+        
+        # Criar cards
+        self._criar_card_stat(cards_frame, "👥 Clientes", str(total_clientes), cores.DESTAQUE, 0, 0)
+        self._criar_card_stat(cards_frame, "✅ Quartos Disponíveis", str(quartos_disponiveis), cores.SUCESSO, 0, 1)
+        self._criar_card_stat(cards_frame, "📅 Reservas Ativas", str(total_reservas), cores.PRIMARIA, 1, 0)
+    
+    def _criar_card_stat(self, parent, titulo, valor, cor, row, col):
+        """Cria um card de estatística."""
+        card = tk.Frame(parent, bg='white', relief='solid', borderwidth=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        tk.Label(card,
+                text=titulo,
+                font=('Segoe UI', 12),
+                bg='white',
+                fg=cores.TEXTO_SECUNDARIO).pack(pady=(20, 5))
+        
+        tk.Label(card,
+                text=valor,
+                font=('Segoe UI', 32, 'bold'),
+                bg='white',
+                fg=cor).pack(pady=(5, 20))
+    
+    def mostrar_cadastro_cliente(self):
+        """Exibe formulário de cadastro de cliente."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Cadastrar Cliente",
+                          "Adicione um novo cliente ao sistema")
+        
+        form = FormularioBase(self.conteudo_frame)
+        form.adicionar_campo('nome', 'Nome Completo')
+        form.adicionar_campo('documento', 'CPF (apenas números)')
+        form.adicionar_campo('email', 'Email')
+        form.adicionar_campo('telefone', 'Telefone')
+        form.adicionar_campo('senha', 'Senha', tipo='password')
+        
+        def salvar():
+            valores = form.obter_valores()
+            try:
+                cliente = self.services['cliente'].criar(
+                    nome=valores['nome'],
+                    documento=valores['documento'],
+                    email=valores['email'],
+                    senha=valores['senha'],
+                    telefone=valores['telefone'],
+                    autor='funcionario'
+                )
+                mostrar_mensagem_sucesso(f"Cliente {cliente.nome} cadastrado com sucesso!")
+                form.limpar()
+            except Exception as e:
+                mostrar_mensagem_erro(str(e))
+        
+        form.adicionar_botoes([
+            ("Salvar", salvar, 'success'),
+            ("Limpar", form.limpar, 'normal')
+        ])
+    
+    def mostrar_lista_clientes(self):
+        """Exibe lista de clientes."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Clientes Cadastrados",
+                          f"Total: {len(self.services['cliente'].clientes)}")
+        
+        colunas = [
+            ('id', 'ID'),
+            ('nome', 'Nome'),
+            ('cpf', 'CPF'),
+            ('email', 'Email'),
+            ('telefone', 'Telefone')
+        ]
+        tabela = TabelaModerna(self.conteudo_frame, colunas,
+                              {'id': 50, 'nome': 200, 'cpf': 120, 'email': 200, 'telefone': 120})
+        
+        for cliente in self.services['cliente'].clientes:
+            tabela.adicionar_item((
+                cliente.idCliente,
+                cliente.nome,
+                cliente.documento,
+                cliente.email,
+                cliente.telefone
+            ))
+        
+        # Botões de ação
+        btn_frame = tk.Frame(self.conteudo_frame, bg=cores.FUNDO_CLARO)
+        btn_frame.pack(fill='x', padx=20, pady=10)
+        
+        def editar_cliente():
+            selecionado = tabela.obter_selecionado()
+            if not selecionado:
+                mostrar_mensagem_erro("Selecione um cliente na tabela.")
+                return
+            
+            id_cliente = selecionado[0]
+            self._mostrar_form_editar_cliente(id_cliente)
+        
+        def excluir_cliente():
+            selecionado = tabela.obter_selecionado()
+            if not selecionado:
+                mostrar_mensagem_erro("Selecione um cliente na tabela.")
+                return
+            
+            if confirmar_acao(f"Deseja realmente excluir o cliente {selecionado[1]}?"):
+                try:
+                    msg = self.services['cliente'].excluir(selecionado[0], autor='funcionario')
+                    mostrar_mensagem_sucesso(msg)
+                    self.mostrar_lista_clientes()
+                except Exception as e:
+                    mostrar_mensagem_erro(str(e))
+        
+        tk.Button(btn_frame,
+                 text="✏️ Editar",
+                 font=('Segoe UI', 10, 'bold'),
+                 bg=cores.AVISO,
+                 fg=cores.TEXTO_CLARO,
+                 activebackground='#D68910',
+                 relief='flat',
+                 cursor='hand2',
+                 command=editar_cliente).pack(side='left', padx=5, ipady=8, ipadx=15)
+        
+        tk.Button(btn_frame,
+                 text="🗑️ Excluir",
+                 font=('Segoe UI', 10, 'bold'),
+                 bg=cores.ERRO,
+                 fg=cores.TEXTO_CLARO,
+                 activebackground='#C0392B',
+                 relief='flat',
+                 cursor='hand2',
+                 command=excluir_cliente).pack(side='left', padx=5, ipady=8, ipadx=15)
+    
+    def _mostrar_form_editar_cliente(self, id_cliente):
+        """Exibe formulário para editar cliente."""
+        cliente = self.services['cliente'].buscarPorId(id_cliente)
+        if not cliente:
+            mostrar_mensagem_erro("Cliente não encontrado.")
+            return
+        
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Editar Cliente",
+                          f"Editando: {cliente.nome}")
+        
+        form = FormularioBase(self.conteudo_frame)
+        form.adicionar_campo('nome', 'Nome Completo')
+        form.adicionar_campo('email', 'Email')
+        form.adicionar_campo('telefone', 'Telefone')
+        form.adicionar_campo('senha', 'Nova Senha (deixe vazio para manter)', tipo='password')
+        
+        # Preencher com dados atuais
+        form.campos['nome'].insert(0, cliente.nome)
+        form.campos['email'].insert(0, cliente.email)
+        form.campos['telefone'].insert(0, cliente.telefone)
+        
+        def salvar():
+            valores = form.obter_valores()
+            try:
+                self.services['cliente'].editar(
+                    id_cliente=id_cliente,
+                    nome=valores['nome'] if valores['nome'] else None,
+                    email=valores['email'] if valores['email'] else None,
+                    telefone=valores['telefone'] if valores['telefone'] else None,
+                    senha=valores['senha'] if valores['senha'] else None,
+                    autor='funcionario'
+                )
+                mostrar_mensagem_sucesso("Cliente editado com sucesso!")
+                self.mostrar_lista_clientes()
+            except Exception as e:
+                mostrar_mensagem_erro(str(e))
+        
+        form.adicionar_botoes([
+            ("Salvar", salvar, 'success'),
+            ("Cancelar", self.mostrar_lista_clientes, 'normal')
+        ])
+    
+    def mostrar_lista_quartos(self):
+        """Exibe lista de quartos."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Quartos do Hotel",
+                          f"Total: {len(self.services['quarto'].quartos)}")
+        
+        colunas = [
+            ('numero', 'Número'),
+            ('tipo', 'Tipo'),
+            ('preco', 'Preço Diária'),
+            ('status', 'Status')
+        ]
+        tabela = TabelaModerna(self.conteudo_frame, colunas,
+                              {'numero': 100, 'tipo': 150, 'preco': 150, 'status': 120})
+        
+        for quarto in self.services['quarto'].quartos:
+            status = "✅ Disponível" if quarto.disponivel else "❌ Ocupado"
+            tabela.adicionar_item((
+                quarto.numero,
+                quarto.tipo,
+                f"R$ {quarto.precoDiaria:.2f}",
+                status
+            ))
+    
+    def mostrar_reservas(self):
+        """Exibe lista de reservas."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Reservas",
+                          f"Total: {len(self.services['reserva'].reservas)}")
+        
+        colunas = [
+            ('id', 'ID'),
+            ('cliente', 'Cliente'),
+            ('quarto', 'Quarto'),
+            ('checkin', 'Check-in'),
+            ('checkout', 'Check-out'),
+            ('valor', 'Valor Total')
+        ]
+        tabela = TabelaModerna(self.conteudo_frame, colunas,
+                              {'id': 50, 'cliente': 150, 'quarto': 80,
+                               'checkin': 100, 'checkout': 100, 'valor': 100})
+        
+        for reserva in self.services['reserva'].reservas:
+            tabela.adicionar_item((
+                reserva.idReserva,
+                reserva.cliente.nome,
+                reserva.quarto.numero,
+                reserva.dataCheckin.strftime('%d/%m/%Y'),
+                reserva.dataCheckout.strftime('%d/%m/%Y'),
+                f"R$ {reserva.valorTotal:.2f}"
+            ))
