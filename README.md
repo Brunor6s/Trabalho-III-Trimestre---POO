@@ -342,8 +342,8 @@ python teste.py
 | Tipo | Email/Usuário | Senha |
 |------|---------------|-------|
 | 👑 **Dono** | `dono@hotel.com` ou `dono` | `123` |
-| 👨‍💼 **Funcionário** | `func@hotel.com` | `func123` |
-| 👤 **Cliente** | `cliente@email.com` | `123` |
+| 👨‍💼 **Funcionário** | `bruno@hotel.com` | `123` |
+| 👤 **Cliente** | `jordan@email.com` | `123` |
 
 ---
 
