@@ -1,0 +1,306 @@
+"""
+Módulo interface_cliente - Interface específica para Clientes.
+
+Implementa as funcionalidades disponíveis para clientes do hotel.
+"""
+
+import tkinter as tk
+from datetime import date, timedelta
+from tkinter import messagebox
+from .base_interface import BaseInterface
+from .componentes import (FormularioBase, TabelaModerna, criar_titulo_pagina,
+                          mostrar_mensagem_sucesso, mostrar_mensagem_erro, confirmar_acao)
+from . import cores
+
+
+class InterfaceCliente(BaseInterface):
+    """Interface para Clientes do hotel."""
+    
+    def __init__(self, janela, usuario, services, on_logout):
+        """
+        Inicializa a interface do cliente.
+        
+        Args:
+            janela: Janela principal
+            usuario: Dados do usuário logado
+            services: Dicionário com todos os services
+            on_logout: Callback de logout
+        """
+        self.services = services
+        super().__init__(janela, usuario, on_logout)
+        
+        # Criar botões do menu
+        self._criar_menu()
+        
+        # Mostrar quartos disponíveis
+        self.mostrar_quartos_disponiveis()
+    
+    def _criar_menu(self):
+        """Cria os botões de navegação do menu."""
+        self.adicionar_botao_menu("Quartos Disponíveis", "🛏️", self.mostrar_quartos_disponiveis)
+        self.adicionar_botao_menu("Minhas Reservas", "📅", self.mostrar_minhas_reservas)
+        self.adicionar_botao_menu("Fazer Reserva", "➕", self.mostrar_fazer_reserva)
+    
+    def mostrar_quartos_disponiveis(self):
+        """Exibe lista de quartos disponíveis."""
+        self.limpar_conteudo()
+        
+        quartos_disp = [q for q in self.services['quarto'].quartos if q.disponivel]
+        criar_titulo_pagina(self.conteudo_frame, "Quartos Disponíveis",
+                          f"Total de {len(quartos_disp)} quartos disponíveis")
+        
+        colunas = [
+            ('numero', 'Número'),
+            ('tipo', 'Tipo'),
+            ('preco', 'Preço Diária'),
+            ('status', 'Status')
+        ]
+        tabela = TabelaModerna(self.conteudo_frame, colunas,
+                              {'numero': 100, 'tipo': 200, 'preco': 150, 'status': 150})
+        
+        for quarto in quartos_disp:
+            tabela.adicionar_item((
+                quarto.numero,
+                quarto.tipo,
+                f"R$ {quarto.precoDiaria:.2f}",
+                "✅ Disponível"
+            ))
+    
+    def mostrar_minhas_reservas(self):
+        """Exibe as reservas do cliente logado."""
+        self.limpar_conteudo()
+        
+        # Buscar reservas do cliente
+        cliente_obj = self.usuario.get('objeto')
+        minhas_reservas = []
+        
+        if cliente_obj:
+            minhas_reservas = [r for r in self.services['reserva'].reservas 
+                              if r.cliente == cliente_obj]
+        
+        criar_titulo_pagina(self.conteudo_frame, "Minhas Reservas",
+                          f"Você tem {len(minhas_reservas)} reserva(s)")
+        
+        if not minhas_reservas:
+            # Mensagem quando não há reservas
+            msg_frame = tk.Frame(self.conteudo_frame, bg='white')
+            msg_frame.pack(fill='both', expand=True, padx=20, pady=50)
+            
+            tk.Label(msg_frame,
+                    text="📭",
+                    font=('Segoe UI', 48),
+                    bg='white').pack(pady=20)
+            
+            tk.Label(msg_frame,
+                    text="Você ainda não possui reservas",
+                    font=('Segoe UI', 16),
+                    bg='white',
+                    fg=cores.TEXTO_SECUNDARIO).pack()
+            
+            tk.Button(msg_frame,
+                     text="Fazer Nova Reserva",
+                     font=('Segoe UI', 11, 'bold'),
+                     bg=cores.BOTAO_NORMAL,
+                     fg=cores.TEXTO_CLARO,
+                     activebackground=cores.BOTAO_HOVER,
+                     relief='flat',
+                     cursor='hand2',
+                     command=self.mostrar_fazer_reserva).pack(pady=20, ipadx=20, ipady=10)
+            return
+        
+        # Tabela de reservas
+        colunas = [
+            ('id', 'ID'),
+            ('quarto', 'Quarto'),
+            ('tipo', 'Tipo'),
+            ('checkin', 'Check-in'),
+            ('checkout', 'Check-out'),
+            ('dias', 'Dias'),
+            ('valor', 'Valor Total')
+        ]
+        tabela = TabelaModerna(self.conteudo_frame, colunas,
+                              {'id': 50, 'quarto': 80, 'tipo': 100,
+                               'checkin': 100, 'checkout': 100, 'dias': 60, 'valor': 100})
+        
+        for reserva in minhas_reservas:
+            dias = (reserva.dataCheckout - reserva.dataCheckin).days
+            tabela.adicionar_item((
+                reserva.idReserva,
+                reserva.quarto.numero,
+                reserva.quarto.tipo,
+                reserva.dataCheckin.strftime('%d/%m/%Y'),
+                reserva.dataCheckout.strftime('%d/%m/%Y'),
+                dias,
+                f"R$ {reserva.valorTotal:.2f}"
+            ))
+        
+        # Botão de cancelar reserva
+        btn_frame = tk.Frame(self.conteudo_frame, bg=cores.FUNDO_CLARO)
+        btn_frame.pack(fill='x', padx=20, pady=10)
+        
+        def cancelar_reserva():
+            selecionado = tabela.obter_selecionado()
+            if not selecionado:
+                mostrar_mensagem_erro("Selecione uma reserva na tabela.")
+                return
+            
+            id_reserva = selecionado[0]
+            quarto_num = selecionado[1]
+            
+            if confirmar_acao(f"Deseja realmente cancelar a reserva do Quarto {quarto_num}?"):
+                try:
+                    reserva = self.services['reserva'].buscarPorId(id_reserva)
+                    if reserva:
+                        msg = self.services['reserva'].cancelar(reserva)
+                        mostrar_mensagem_sucesso(msg)
+                        self.mostrar_minhas_reservas()
+                    else:
+                        mostrar_mensagem_erro("Reserva não encontrada.")
+                except Exception as e:
+                    mostrar_mensagem_erro(str(e))
+        
+        tk.Button(btn_frame,
+                 text="❌ Cancelar Reserva",
+                 font=('Segoe UI', 10, 'bold'),
+                 bg=cores.ERRO,
+                 fg=cores.TEXTO_CLARO,
+                 activebackground='#C0392B',
+                 relief='flat',
+                 cursor='hand2',
+                 command=cancelar_reserva).pack(side='left', padx=5, ipady=8, ipadx=15)
+    
+    def mostrar_fazer_reserva(self):
+        """Exibe formulário para fazer nova reserva."""
+        self.limpar_conteudo()
+        criar_titulo_pagina(self.conteudo_frame, "Fazer Reserva",
+                          "Selecione um quarto e as datas")
+        
+        # Verificar se há quartos disponíveis
+        quartos_disp = [q for q in self.services['quarto'].quartos if q.disponivel]
+        
+        if not quartos_disp:
+            msg_frame = tk.Frame(self.conteudo_frame, bg='white')
+            msg_frame.pack(fill='both', expand=True, padx=20, pady=50)
+            
+            tk.Label(msg_frame,
+                    text="😔",
+                    font=('Segoe UI', 48),
+                    bg='white').pack(pady=20)
+            
+            tk.Label(msg_frame,
+                    text="Não há quartos disponíveis no momento",
+                    font=('Segoe UI', 16),
+                    bg='white',
+                    fg=cores.TEXTO_SECUNDARIO).pack()
+            return
+        
+        # Formulário
+        form = FormularioBase(self.conteudo_frame)
+        
+        # Opções de quartos
+        opcoes_quartos = [f"{q.numero} - {q.tipo} (R$ {q.precoDiaria:.2f}/dia)" 
+                         for q in quartos_disp]
+        form.adicionar_campo('quarto', 'Quarto', tipo='combo', opcoes=opcoes_quartos)
+        
+        # Data de check-in
+        tk.Label(form.frame,
+                text="Data de Check-in (DD/MM/AAAA):",
+                font=('Segoe UI', 10),
+                bg='white',
+                fg=cores.TEXTO_ESCURO,
+                anchor='w').pack(fill='x', pady=(10, 5))
+        
+        # Frame para data check-in
+        checkin_frame = tk.Frame(form.frame, bg='white')
+        checkin_frame.pack(fill='x')
+        
+        dia_in = tk.Entry(checkin_frame, font=('Segoe UI', 10), width=5, relief='solid', borderwidth=1)
+        dia_in.pack(side='left', ipady=8, padx=(0, 5))
+        dia_in.insert(0, "01")
+        
+        mes_in = tk.Entry(checkin_frame, font=('Segoe UI', 10), width=5, relief='solid', borderwidth=1)
+        mes_in.pack(side='left', ipady=8, padx=(0, 5))
+        mes_in.insert(0, "01")
+        
+        ano_in = tk.Entry(checkin_frame, font=('Segoe UI', 10), width=8, relief='solid', borderwidth=1)
+        ano_in.pack(side='left', ipady=8)
+        ano_in.insert(0, "2025")
+        
+        # Data de check-out
+        tk.Label(form.frame,
+                text="Data de Check-out (DD/MM/AAAA):",
+                font=('Segoe UI', 10),
+                bg='white',
+                fg=cores.TEXTO_ESCURO,
+                anchor='w').pack(fill='x', pady=(10, 5))
+        
+        checkout_frame = tk.Frame(form.frame, bg='white')
+        checkout_frame.pack(fill='x')
+        
+        dia_out = tk.Entry(checkout_frame, font=('Segoe UI', 10), width=5, relief='solid', borderwidth=1)
+        dia_out.pack(side='left', ipady=8, padx=(0, 5))
+        dia_out.insert(0, "05")
+        
+        mes_out = tk.Entry(checkout_frame, font=('Segoe UI', 10), width=5, relief='solid', borderwidth=1)
+        mes_out.pack(side='left', ipady=8, padx=(0, 5))
+        mes_out.insert(0, "01")
+        
+        ano_out = tk.Entry(checkout_frame, font=('Segoe UI', 10), width=8, relief='solid', borderwidth=1)
+        ano_out.pack(side='left', ipady=8)
+        ano_out.insert(0, "2025")
+        
+        def salvar_reserva():
+            try:
+                # Pegar quarto selecionado
+                selecao = form.campos['quarto'].get()
+                if not selecao:
+                    mostrar_mensagem_erro("Por favor, selecione um quarto.")
+                    return
+                
+                numero_quarto = int(selecao.split(' - ')[0])
+                quarto = next((q for q in quartos_disp if q.numero == numero_quarto), None)
+                
+                if not quarto:
+                    mostrar_mensagem_erro("Quarto não encontrado.")
+                    return
+                
+                # Criar datas
+                data_in = date(int(ano_in.get()), int(mes_in.get()), int(dia_in.get()))
+                data_out = date(int(ano_out.get()), int(mes_out.get()), int(dia_out.get()))
+                
+                # Criar reserva
+                cliente_obj = self.usuario.get('objeto')
+                reserva = self.services['reserva'].criarReserva(
+                    dataEntrada=data_in,
+                    dataSaida=data_out,
+                    cliente=cliente_obj,
+                    quarto=quarto
+                )
+                
+                mostrar_mensagem_sucesso(
+                    f"Reserva criada com sucesso!\n"
+                    f"Quarto: {quarto.numero}\n"
+                    f"Valor Total: R$ {reserva.valorTotal:.2f}"
+                )
+                
+                # Mostrar minhas reservas
+                self.mostrar_minhas_reservas()
+                
+            except ValueError as e:
+                mostrar_mensagem_erro(f"Data inválida: {e}")
+            except Exception as e:
+                mostrar_mensagem_erro(str(e))
+        
+        # Botões
+        btn_frame = tk.Frame(form.frame, bg='white')
+        btn_frame.pack(fill='x', pady=(20, 0))
+        
+        tk.Button(btn_frame,
+                 text="Confirmar Reserva",
+                 font=('Segoe UI', 10, 'bold'),
+                 bg=cores.SUCESSO,
+                 fg=cores.TEXTO_CLARO,
+                 activebackground='#229954',
+                 relief='flat',
+                 cursor='hand2',
+                 command=salvar_reserva).pack(side='left', padx=5, ipady=10, ipadx=20)
