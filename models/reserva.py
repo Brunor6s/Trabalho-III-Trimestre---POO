@@ -1,11 +1,15 @@
 """
-Módulo reserva - Define a classe Reserva.
+Módulo reserva - Define a classe Reserva do sistema de hotel.
+
+Este módulo foi adaptado para o Princípio de Responsabilidade Única (SRP).
+A classe agora foca exclusivamente na gestão do contrato de reserva, 
+delegando cálculos financeiros complexos para serviços especializados.
 """
 
 from datetime import date
 from typing import TYPE_CHECKING
 
-# Evita importação circular
+# Evita importação circular para fins de tipagem
 if TYPE_CHECKING:
     from .cliente import Cliente
     from .quarto import Quarto
@@ -16,42 +20,48 @@ class Reserva:
     Classe que representa uma reserva de quarto no hotel.
     
     Demonstra composição: uma Reserva possui um Cliente e um Quarto.
+    Aplica o Princípio SRP: A classe é responsável apenas pelos dados e 
+    pelo estado do ciclo de vida da reserva (Check-in/Check-out/Cancelamento).
     
     Atributos:
-        idReserva (int): Identificador único da reserva
-        dataCheckin (date): Data de check-in
-        dataCheckout (date): Data de check-out
-        valorTotal (float): Valor total da reserva
-        cliente (Cliente): Cliente que fez a reserva
-        quarto (Quarto): Quarto reservado
+        idReserva (int): Identificador único da reserva gerado automaticamente.
+        dataCheckin (date): Data de entrada do cliente no hotel.
+        dataCheckout (date): Data prevista de saída do cliente.
+        valorTotal (float): Valor final da fatura (atribuído via FinanceiroService).
+        cliente (Cliente): Objeto da classe Cliente associado à reserva.
+        quarto (Quarto): Objeto da classe Quarto associado à reserva.
     """
     
+    # Atributo de classe para controle de ID único
     _contador_id = 0
     
     def __init__(self, dataCheckin: date, dataCheckout: date, cliente: 'Cliente', quarto: 'Quarto', idReserva: int = None):
         """
-        Inicializa uma reserva.
+        Inicializa uma nova instância de Reserva com validações de integridade.
         
         Args:
-            dataCheckin (date): Data de entrada
-            dataCheckout (date): Data de saída
-            cliente (Cliente): Cliente da reserva
-            quarto (Quarto): Quarto reservado
-            idReserva (int, optional): ID da reserva. Se None, será gerado automaticamente.
+            dataCheckin (date): Data de entrada.
+            dataCheckout (date): Data de saída.
+            cliente (Cliente): Instância do cliente solicitante.
+            quarto (Quarto): Instância do quarto a ser ocupado.
+            idReserva (int, optional): ID manual, se fornecido (usado em persistência).
         
         Raises:
-            ValueError: Se as datas forem inválidas
-            Exception: Se o quarto não estiver disponível
+            ValueError: Se a data de checkout não for posterior à de checkin.
+            Exception: Se o quarto selecionado não estiver disponível no momento.
         """
-        # Validação de datas
+        # Validação lógica de Datas
+        if not isinstance(dataCheckin, date) or not isinstance(dataCheckout, date):
+            raise ValueError("As datas de check-in e check-out devem ser objetos do tipo date.")
+            
         if dataCheckout <= dataCheckin:
-            raise ValueError("Data de check-out deve ser posterior à data de check-in.")
+            raise ValueError("Erro de Integridade: A data de check-out deve ser obrigatoriamente posterior à data de check-in.")
         
-        # Validação de disponibilidade do quarto
+        # Validação de disponibilidade do Quarto (Estado do objeto composto)
         if not quarto.disponivel:
-            raise Exception("Quarto não está disponível.")
+            raise Exception(f"Operação Inválida: O Quarto {quarto.numero} já se encontra ocupado ou em manutenção.")
         
-        # Gera ID se não fornecido
+        # Gerenciamento de Identificador Único
         if idReserva is None:
             Reserva._contador_id += 1
             self._idReserva = Reserva._contador_id
@@ -60,120 +70,109 @@ class Reserva:
             if idReserva > Reserva._contador_id:
                 Reserva._contador_id = idReserva
         
+        # Atributos protegidos (Encapsulamento)
         self._dataCheckin = dataCheckin
         self._dataCheckout = dataCheckout
-        self._valorTotal = 0.0
+        self._valorTotal = 0.0  # Inicializado em zero, calculado externamente pelo FinanceiroService
         self._cliente = cliente
         self._quarto = quarto
         
-        # Marca o quarto como ocupado
+        # Alteração de estado do objeto associado (Composição)
+        # O Quarto passa a ser ocupado no momento da confirmação da reserva
         quarto.marcarOcupado()
-        
-        # Calcula o valor total automaticamente
-        self.calcularTotal()
-    
+
+    # --- PROPRIEDADES (GETTERS E SETTERS) COM VALIDAÇÕES ---
+
     @property
     def idReserva(self) -> int:
-        """Retorna o ID da reserva."""
+        """Retorna o identificador único da reserva."""
         return self._idReserva
-    
+
     @property
     def dataCheckin(self) -> date:
-        """Retorna a data de check-in."""
+        """Retorna a data de check-in da reserva."""
         return self._dataCheckin
     
     @dataCheckin.setter
     def dataCheckin(self, valor: date):
-        """
-        Define a data de check-in.
-        
-        Args:
-            valor (date): Nova data de check-in
-        
-        Raises:
-            ValueError: Se a data for inválida
-        """
+        """Define a data de check-in com validação de consistência."""
         if not isinstance(valor, date):
-            raise ValueError("Data de check-in deve ser do tipo date.")
-        
-        if hasattr(self, '_dataCheckout') and self._dataCheckout and valor >= self._dataCheckout:
-            raise ValueError("Data de check-in deve ser anterior à data de check-out.")
-        
+            raise ValueError("Tipo Inválido: A data deve ser uma instância de datetime.date.")
+        if hasattr(self, '_dataCheckout') and valor >= self._dataCheckout:
+            raise ValueError("Consistência de Datas: O Check-in não pode ocorrer após ou no mesmo dia do Check-out.")
         self._dataCheckin = valor
-    
+
     @property
     def dataCheckout(self) -> date:
-        """Retorna a data de check-out."""
+        """Retorna a data de check-out da reserva."""
         return self._dataCheckout
     
     @dataCheckout.setter
     def dataCheckout(self, valor: date):
-        """
-        Define a data de check-out.
-        
-        Args:
-            valor (date): Nova data de check-out
-        
-        Raises:
-            ValueError: Se a data for inválida
-        """
+        """Define a data de check-out com validação de consistência."""
         if not isinstance(valor, date):
-            raise ValueError("Data de check-out deve ser do tipo date.")
-        
-        if hasattr(self, '_dataCheckin') and self._dataCheckin and valor <= self._dataCheckin:
-            raise ValueError("Data de check-out deve ser posterior à data de check-in.")
-        
+            raise ValueError("Tipo Inválido: A data deve ser uma instância de datetime.date.")
+        if hasattr(self, '_dataCheckin') and valor <= self._dataCheckin:
+            raise ValueError("Consistência de Datas: O Check-out deve ser estritamente posterior ao Check-in.")
         self._dataCheckout = valor
-    
+
     @property
     def valorTotal(self) -> float:
-        """Retorna o valor total da reserva."""
+        """Retorna o valor total da reserva calculado pelo FinanceiroService."""
         return self._valorTotal
     
+    @valorTotal.setter
+    def valorTotal(self, valor: float):
+        """
+        Define o valor total da reserva.
+        Aplica SRP: Este valor deve ser calculado por FinanceiroService e injetado aqui.
+        """
+        if not isinstance(valor, (int, float)) or valor < 0:
+            raise ValueError("Erro Financeiro: O valor total da fatura não pode ser negativo.")
+        self._valorTotal = float(valor)
+
     @property
     def cliente(self) -> 'Cliente':
-        """Retorna o cliente da reserva."""
+        """Retorna a instância do Cliente associado à esta reserva."""
         return self._cliente
     
     @property
     def quarto(self) -> 'Quarto':
-        """Retorna o quarto da reserva."""
+        """Retorna a instância do Quarto associado à esta reserva."""
         return self._quarto
-    
-    def calcularTotal(self) -> float:
-        """
-        Calcula o valor total da reserva baseado nas datas e no preço da diária.
-        
-        Returns:
-            float: Valor total da reserva
-        """
-        dias = (self.dataCheckout - self.dataCheckin).days
-        self._valorTotal = dias * self.quarto.precoDiaria
-        return self._valorTotal
-    
+
+    # --- MÉTODOS DE COMPORTAMENTO ---
+
     def confirmarReserva(self) -> bool:
         """
-        Confirma a reserva.
+        Realiza a confirmação formal da reserva no sistema.
         
         Returns:
-            bool: True se confirmada com sucesso
+            bool: True se a confirmação foi processada com sucesso.
         """
-        print(f"Reserva {self.idReserva} confirmada para {self.cliente.nome}.")
+        print(f"[LOG] Sistema: Reserva #{self.idReserva} confirmada para o cliente {self.cliente.nome}.")
         return True
     
     def cancelarReserva(self) -> bool:
         """
-        Cancela a reserva e libera o quarto.
+        Cancela a reserva atual e restaura a disponibilidade do quarto associado.
+        Aplica lógica de alteração de estado entre objetos relacionados.
         
         Returns:
-            bool: True se cancelada com sucesso
+            bool: True se o cancelamento e a liberação do quarto foram concluídos.
         """
-        print(f"Reserva {self.idReserva} cancelada.")
+        print(f"[LOG] Sistema: Processando cancelamento da reserva #{self.idReserva}...")
         self.quarto.liberarQuarto()
+        print(f"[LOG] Sistema: Quarto {self.quarto.numero} liberado e disponível para novas reservas.")
         return True
     
     def __str__(self):
-        """Retorna representação em string da reserva."""
-        return (f"Reserva {self.idReserva} - Cliente: {self.cliente.nome} - "
-                f"Quarto: {self.quarto.numero} - {self.dataCheckin} -> {self.dataCheckout} - "
-                f"Total: R$ {self.valorTotal:.2f}")
+        """
+        Retorna uma representação textual detalhada do objeto Reserva.
+        Utilizado para exibição em logs e listagens da interface.
+        """
+        return (f"Reserva ID: {self.idReserva} | "
+                f"Hóspede: {self.cliente.nome} | "
+                f"Acomodação: Quarto {self.quarto.numero} ({self.quarto.tipo}) | "
+                f"Período: {self.dataCheckin.strftime('%d/%m/%Y')} até {self.dataCheckout.strftime('%d/%m/%Y')} | "
+                f"Status Financeiro: R$ {self.valorTotal:.2f}")
