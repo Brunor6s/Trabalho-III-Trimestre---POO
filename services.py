@@ -487,41 +487,18 @@ class QuartoService:
 
 
 class ReservaService:
-    """
-    Serviço para gerenciamento de reservas.
-    
-    Responsável por criar, listar e gerenciar reservas de quartos.
-    """
-    
-    def __init__(self):
-        """Inicializa o serviço de reservas com lista vazia."""
-        self._reservas = []
-    
-    @property
-    def reservas(self):
-        """Retorna a lista de reservas cadastradas."""
-        return self._reservas
-    
+    # ... (mantenha o init e properties)
+
     def criarReserva(self, dataEntrada: date, dataSaida: date, 
                      cliente: Cliente, quarto: Quarto, idReserva: int = None) -> Reserva:
-        """
-        Cria e registra uma nova reserva.
         
-        Args:
-            dataEntrada (date): Data de check-in
-            dataSaida (date): Data de check-out
-            cliente (Cliente): Cliente que faz a reserva
-            quarto (Quarto): Quarto a ser reservado
-            idReserva (int, optional): ID da reserva
-        
-        Returns:
-            Reserva: Objeto reserva criado
-        
-        Raises:
-            ValueError: Se datas forem inválidas
-            Exception: Se quarto não estiver disponível
-        """
-        # Cria a reserva (validações são feitas no construtor)
+        # NOVO: Verificar se o quarto já está ocupado nesse período específico
+        for r in self._reservas:
+            if r.quarto == quarto:
+                # Lógica de colisão de datas: (E1 < S2) e (S1 > E2)
+                if dataEntrada < r.dataCheckout and dataSaida > r.dataCheckin:
+                    raise Exception(f"O quarto {quarto.numero} já possui uma reserva entre {r.dataCheckin} e {r.dataCheckout}.")
+
         reserva = Reserva(dataCheckin=dataEntrada, dataCheckout=dataSaida,
                          cliente=cliente, quarto=quarto, idReserva=idReserva)
         
