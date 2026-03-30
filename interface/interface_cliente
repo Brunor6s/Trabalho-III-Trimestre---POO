@@ -290,7 +290,27 @@ class InterfaceCliente(BaseInterface):
                 mostrar_mensagem_erro(f"Data inválida: {e}")
             except Exception as e:
                 mostrar_mensagem_erro(str(e))
-        
+            try:
+                # Validar se os campos de data são numéricos
+                d_in, m_in, a_in = dia_in.get(), mes_in.get(), ano_in.get()
+                d_out, m_out, a_out = dia_out.get(), mes_out.get(), ano_out.get()
+
+                if not all(x.isdigit() for x in [d_in, m_in, a_in, d_out, m_out, a_out]):
+                    raise ValueError("As datas devem conter apenas números.")
+
+                # Criar datas com validação nativa do Python
+                data_in = date(int(a_in), int(m_in), int(d_in))
+                data_out = date(int(a_out), int(m_out), int(d_out))
+
+                if data_in < date.today():
+                    raise ValueError("A data de check-in não pode ser no passado.")
+
+                # ... (restante do código de busca de quarto e criação de reserva)
+            except ValueError as e:
+                mostrar_mensagem_erro(f"Erro de Data: {e}")
+            except Exception as e:
+                mostrar_mensagem_erro(str(e))
+                
         # Botões
         btn_frame = tk.Frame(form.frame, bg='white')
         btn_frame.pack(fill='x', pady=(20, 0))
