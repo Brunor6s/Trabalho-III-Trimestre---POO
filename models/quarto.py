@@ -1,107 +1,127 @@
 """
-Módulo quarto - Define a classe Quarto e suas especializações.
-Aplicando OCP (Open-Closed) e LSP (Liskov Substitution).
+Módulo quarto - Define a hierarquia de quartos do hotel seguindo SOLID.
+
+Princípios Aplicados:
+- OCP (Open-Closed Principle): A classe base Quarto está fechada para modificação, 
+  mas aberta para novos tipos de acomodação via herança.
+- LSP (Liskov Substitution Principle): Subclasses de Quarto podem substituir 
+  a classe base sem quebrar a lógica de disponibilidade e identificação.
 """
 from abc import ABC, abstractmethod
 
 class Quarto(ABC):
     """
-    Classe abstrata que representa um quarto do hotel.
-    
-    Atributos:
-        numero (int): Número do quarto
-        disponivel (bool): Status de disponibilidade do quarto
+    Classe abstrata que representa a estrutura base de um quarto.
+    Encapsula o estado de disponibilidade e a identificação numérica.
     """
     
     def __init__(self, numero: int):
         """
-        Inicializa um quarto base.
+        Inicializa os atributos protegidos do quarto.
         
         Args:
-            numero (int): Número do quarto
+            numero (int): Identificador numérico único do quarto.
         """
         self._numero = None
         self._disponivel = True
         
-        # Usa property para validação original
+        # Atribuição via setter para disparar validações
         self.numero = numero
     
     @property
     def numero(self) -> int:
-        """Retorna o número do quarto."""
+        """Retorna o identificador numérico do quarto."""
         return self._numero
     
     @numero.setter
     def numero(self, valor: int):
         """
-        Define o número do quarto com validação estrita.
+        Valida e define o número do quarto.
+        
+        Raises:
+            ValueError: Se o número fornecido não for um inteiro positivo.
         """
         if not isinstance(valor, int) or valor <= 0:
-            raise ValueError("Número do quarto deve ser um inteiro positivo.")
+            raise ValueError("Erro de Cadastro: O número do quarto deve ser um valor inteiro estritamente positivo.")
         self._numero = valor
     
     @property
     @abstractmethod
     def precoDiaria(self) -> float:
-        """Método abstrato: Cada subclasse define seu preço (OCP)."""
+        """
+        Método abstrato que obriga subclasses a definirem seu preço.
+        Aplica OCP: Novos preços são definidos em novas classes, não em ifs.
+        """
         pass
 
     @property
     @abstractmethod
     def tipo(self) -> str:
-        """Método abstrato: Cada subclasse define seu tipo string (OCP)."""
+        """Retorna o nome do tipo do quarto em formato string."""
         pass
 
     @property
     def disponivel(self) -> bool:
-        """Retorna se o quarto está disponível."""
+        """Retorna o status atual de ocupação do quarto."""
         return self._disponivel
     
     @disponivel.setter
     def disponivel(self, valor: bool):
-        """Define a disponibilidade do quarto."""
+        """Define explicitamente a disponibilidade (True=Livre, False=Ocupado)."""
         self._disponivel = bool(valor)
     
     def marcarOcupado(self):
-        """Marca o quarto como ocupado."""
+        """Altera o estado do quarto para indisponível."""
         self._disponivel = False
     
     def liberarQuarto(self):
-        """Libera o quarto, marcando-o como disponível."""
+        """Restaura a disponibilidade do quarto para novas reservas."""
         self._disponivel = True
     
-    def revisarAposCheckout(self):
-        """Registra necessidade de revisão."""
-        print(f"Quarto {self.numero} precisa ser revisado após checkout.")
+    def revisarAposCheckout(self) -> bool:
+        """
+        Simula o processo de revisão e limpeza obrigatória.
+        
+        Returns:
+            bool: Status da operação de revisão.
+        """
+        print(f"[REVISÃO] Quarto {self.numero} entrou em fila de limpeza.")
         return True
     
     def __str__(self):
-        """Representação em string respeitando o polimorfismo."""
-        status = "Disponível" if self.disponivel else "Ocupado"
-        return f"Quarto {self.numero} - {self.tipo} - R$ {self.precoDiaria:.2f} - {status}"
+        """Representação textual rica para listagem em tabelas e logs."""
+        status = "✅ DISPONÍVEL" if self.disponivel else "❌ OCUPADO"
+        return (f"Acomodação {self.numero:03d} | "
+                f"Categoria: {self.tipo:12s} | "
+                f"Diária: R$ {self.precoDiaria:8.2f} | "
+                f"Status: {status}")
 
-# --- SUBCLASSES QUE EXTENDEM O QUARTO (OCP EM AÇÃO) ---
+# --- SUBCLASSES ESPECIALIZADAS (OCP / LSP) ---
 
 class QuartoSolteiro(Quarto):
+    """Especialização para hóspedes individuais."""
     @property
-    def precoDiaria(self): return 150.0
+    def precoDiaria(self) -> float: return 150.0
     @property
-    def tipo(self): return "Solteiro"
+    def tipo(self) -> str: return "Solteiro"
 
 class QuartoCasal(Quarto):
+    """Especialização para casais ou duplas."""
     @property
-    def precoDiaria(self): return 200.0
+    def precoDiaria(self) -> float: return 220.0
     @property
-    def tipo(self): return "Casal"
+    def tipo(self) -> str: return "Casal"
 
 class QuartoLuxo(Quarto):
+    """Especialização de alto padrão com serviços adicionais."""
     @property
-    def precoDiaria(self): return 350.0
+    def precoDiaria(self) -> float: return 450.0
     @property
-    def tipo(self): return "Luxo"
+    def tipo(self) -> str: return "Luxo"
 
 class QuartoPresidencial(Quarto):
+    """Categoria máxima do hotel com infraestrutura completa."""
     @property
-    def precoDiaria(self): return 1000.0
+    def precoDiaria(self) -> float: return 1250.0
     @property
-    def tipo(self): return "Presidencial"
+    def tipo(self) -> str: return "Presidencial"
