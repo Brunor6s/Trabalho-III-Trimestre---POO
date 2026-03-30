@@ -135,43 +135,13 @@ class TelaLogin:
         
         usuario = None
         
-        # Verificar dono (credenciais fixas)
-        if (email == "maria.jobim@habbo.com" or email == "dono") and senha == "habbohotel2025":
+        # Verificar dono (Sincronizado com main.py)
+        if (email == "dono@hotel.com" or email == "dono") and senha == "123":
             usuario = {
                 "tipo": "dono",
                 "nome": "Administrador",
-                "email": "maria.jobim@habbo.com"
+                "email": "dono@hotel.com"
             }
-        
-        # Verificar funcionário
-        if not usuario:
-            func = self.funcionario_service.buscarPorEmail(email)
-            if func and func.senha == senha:
-                usuario = {
-                    "tipo": "funcionario",
-                    "nome": func.nome,
-                    "email": func.email,
-                    "objeto": func
-                }
-        
-        # Verificar cliente
-        if not usuario:
-            cliente = self.cliente_service.buscarPorEmail(email)
-            if cliente and cliente.senha == senha:
-                usuario = {
-                    "tipo": "cliente",
-                    "nome": cliente.nome,
-                    "email": cliente.email,
-                    "objeto": cliente
-                }
-        
-        if usuario:
-            self.frame.destroy()
-            self.on_login_success(usuario)
-        else:
-            messagebox.showerror("Erro", "Email ou senha incorretos.")
-            self.senha_entry.delete(0, 'end')
-            self.senha_entry.focus()
     
     def destruir(self):
         """Destrói a tela de login."""
