@@ -5,6 +5,7 @@ Realiza a composição de todos os serviços seguindo o Princípio DIP.
 from services import ClienteService, FuncionarioService, QuartoService, ReservaService, FinanceiroService
 from interface import HotelApp
 from models.cliente import Cliente
+from models.quarto import QuartoSolteiro, QuartoCasal, QuartoLuxo, QuartoPresidencial
 
 # 1. Repositórios (Persistência em Memória - DIP)
 db_clientes = []
@@ -26,15 +27,15 @@ def carregar_dados_teste():
     serv_cliente.cadastrarCliente(c1)
     
     # Cadastro de Quartos Polimórficos
-    serv_quarto.criar(101, "Solteiro")
-    serv_quarto.criar(102, "Casal")
-    serv_quarto.criar(201, "Luxo")
-    serv_quarto.criar(301, "Presidencial")
+    serv_quarto.cadastrarQuarto(QuartoSolteiro(101))
+    serv_quarto.cadastrarQuarto(QuartoCasal(102))
+    serv_quarto.cadastrarQuarto(QuartoLuxo(201))
+    serv_quarto.cadastrarQuarto(QuartoPresidencial(301))
 
 if __name__ == "__main__":
     carregar_dados_teste()
     
     print("[SISTEMA] Iniciando HotelApp...")
     # Passamos os serviços configurados para a interface
-    app = HotelApp(serv_cliente, serv_func, serv_quarto, serv_reserva)
+    app = HotelApp(serv_cliente, serv_func, serv_quarto, serv_reserva, serv_financeiro)
     app.run()

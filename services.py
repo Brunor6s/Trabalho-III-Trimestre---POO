@@ -253,8 +253,9 @@ class ReservaService:
     Delegou o cálculo financeiro para o FinanceiroService (SRP).
     """
     
-    def __init__(self, repositorio_reservas: list):
+    def __init__(self, repositorio_reservas: list, financeiro_service):
         self._reservas = repositorio_reservas
+        self._financeiro = financeiro_service
     
     @property
     def reservas(self):
@@ -265,6 +266,9 @@ class ReservaService:
         """Cria uma nova reserva."""
         reserva = Reserva(dataCheckin=dataEntrada, dataCheckout=dataSaida,
                          cliente=cliente, quarto=quarto, idReserva=idReserva)
+        
+        # Calcular o valor total da reserva
+        self._financeiro.calcular_fatura(reserva)
         
         self._reservas.append(reserva)
         return reserva

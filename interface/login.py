@@ -142,6 +142,31 @@ class TelaLogin:
                 "nome": "Administrador",
                 "email": "dono@hotel.com"
             }
+        else:
+            # Verificar funcionário
+            funcionario = self.funcionario_service.buscarPorEmail(email)
+            if funcionario and funcionario.senha == senha:
+                usuario = {
+                    "tipo": "funcionario",
+                    "nome": funcionario.nome,
+                    "email": funcionario.email,
+                    "id": funcionario.idFuncionario
+                }
+            else:
+                # Verificar cliente
+                cliente = self.cliente_service.buscarPorEmail(email)
+                if cliente and cliente.senha == senha:
+                    usuario = {
+                        "tipo": "cliente",
+                        "nome": cliente.nome,
+                        "email": cliente.email,
+                        "id": cliente.idCliente
+                    }
+        
+        if usuario:
+            self.on_login_success(usuario)
+        else:
+            messagebox.showerror("Erro", "Email ou senha incorretos.")
     
     def destruir(self):
         """Destrói a tela de login."""

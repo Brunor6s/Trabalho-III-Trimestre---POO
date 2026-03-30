@@ -1,9 +1,7 @@
 """
-Módulo app - Aplicação principal do sistema.
-
-Gerencia a janela principal e a troca entre telas (login e interfaces de usuário).
+Módulo app - Aplicação principal do sistema de hotel.
+Gerencia a janela principal e a troca entre as interfaces de usuário.
 """
-
 import tkinter as tk
 from .login import TelaLogin
 from .interface_dono import InterfaceDono
@@ -11,50 +9,42 @@ from .interface_funcionario import InterfaceFuncionario
 from .interface_cliente import InterfaceCliente
 from .estilos import configurar_estilos
 
-
 class HotelApp:
     """
-    Aplicação principal do sistema de hotel.
-    
-    Gerencia a janela principal e a navegação entre diferentes interfaces.
+    Classe principal que coordena o fluxo da aplicação.
     """
     
-    def __init__(self, cliente_service, funcionario_service, quarto_service, reserva_service):
+    def __init__(self, cliente_service, funcionario_service, quarto_service, reserva_service, financeiro_service):
         """
-        Inicializa a aplicação.
-        
-        Args:
-            cliente_service: Serviço de gerenciamento de clientes
-            funcionario_service: Serviço de gerenciamento de funcionários
-            quarto_service: Serviço de gerenciamento de quartos
-            reserva_service: Serviço de gerenciamento de reservas
+        Inicializa o App com todos os serviços necessários (DIP).
         """
-        # Armazenar services
+        # Armazenar referências dos serviços
         self.services = {
             'cliente': cliente_service,
             'funcionario': funcionario_service,
             'quarto': quarto_service,
-            'reserva': reserva_service
+            'reserva': reserva_service,
+            'financeiro': financeiro_service
         }
         
-        # Criar janela principal
+        # Configuração da Janela Principal
         self.janela = tk.Tk()
-        self.janela.title("Sistema de Hotel - Gestão de Reservas")
+        self.janela.title("🏨 Hotel Management System - SOLID Edition")
         
-        # Abrir em tela cheia
-        self.janela.state('zoomed')
+        # Tenta abrir em tela cheia (Windows/Linux)
+        try:
+            self.janela.state('zoomed')
+        except:
+            self.janela.attributes('-fullscreen', True)
         
-        # Configurar estilos
+        # Aplicar Estilos Visuais
         configurar_estilos()
         
-        # Interface atual
         self.interface_atual = None
-        
-        # Mostrar tela de login
         self.mostrar_login()
     
     def mostrar_login(self):
-        """Exibe a tela de login."""
+        """Limpa a tela e exibe o formulário de login."""
         if self.interface_atual:
             self.interface_atual.destruir()
         
@@ -66,41 +56,20 @@ class HotelApp:
         )
     
     def on_login_success(self, usuario):
-        """
-        Callback chamado quando login é bem-sucedido.
-        
-        Args:
-            usuario: Dicionário com dados do usuário logado
-        """
-        # Destruir tela de login
+        """Callback acionado após login válido."""
         if self.interface_atual:
             self.interface_atual.destruir()
         
-        # Criar interface apropriada baseada no tipo de usuário
         tipo = usuario['tipo']
         
+        # Injeção de dependências nas interfaces específicas
         if tipo == 'dono':
-            self.interface_atual = InterfaceDono(
-                self.janela,
-                usuario,
-                self.services,
-                self.mostrar_login
-            )
+            self.interface_atual = InterfaceDono(self.janela, usuario, self.services, self.mostrar_login)
         elif tipo == 'funcionario':
-            self.interface_atual = InterfaceFuncionario(
-                self.janela,
-                usuario,
-                self.services,
-                self.mostrar_login
-            )
+            self.interface_atual = InterfaceFuncionario(self.janela, usuario, self.services, self.mostrar_login)
         elif tipo == 'cliente':
-            self.interface_atual = InterfaceCliente(
-                self.janela,
-                usuario,
-                self.services,
-                self.mostrar_login
-            )
+            self.interface_atual = InterfaceCliente(self.janela, usuario, self.services, self.mostrar_login)
     
     def run(self):
-        """Inicia o loop principal da aplicação."""
+        """Inicia o loop de eventos do Tkinter."""
         self.janela.mainloop()
