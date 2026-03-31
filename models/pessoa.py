@@ -16,22 +16,11 @@ class Pessoa(ABC):
         email (str): Email da pessoa
     """
     
-    def __init__(self, nome: str, documento: str, email: str):
-        """
-        Inicializa uma pessoa.
-        
-        Args:
-            nome (str): Nome completo da pessoa
-            documento (str): CPF da pessoa
-            email (str): Email da pessoa
-        
-        Raises:
-            ValueError: Se algum parâmetro for inválido
-        """
+    def __init__(self, nome, documento, email,):
         self._nome = None
         self._documento = None
         self._email = None
-        
+
         # Usa properties para validação
         self.nome = nome
         self.documento = documento
@@ -122,3 +111,30 @@ class Pessoa(ABC):
     def __str__(self):
         """Retorna representação em string da pessoa."""
         return f"{self.nome} - {self.documento} - {self.email}"
+
+
+class Reserva:
+    """
+    Classe que implementa o padrão Strategy para cálculo de preço.
+    
+    Atributos:
+        estrategia_preco: Implementação da estratégia de cálculo de preço
+    """
+    
+    def __init__(self, estrategia_preco):
+        """
+        Inicializa uma Reserva com uma estratégia de cálculo de preço.
+        
+        Args:
+            estrategia_preco: Objeto com método calcular() para calcular o preço
+        """
+        self.estrategia_preco = estrategia_preco
+    
+    def calcular_preco(self):
+        """
+        Calcula o preço utilizando a estratégia configurada.
+        
+        Returns:
+            O preço calculado pela estratégia
+        """
+        return self.estrategia_preco.calcular()

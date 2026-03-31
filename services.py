@@ -36,6 +36,16 @@ class FinanceiroService:
         return total
 
 
+class CalculadoraPreco:
+    def calcular(self, quarto):
+        if quarto.tipo == "simples":
+            return 100
+        elif quarto.tipo == "luxo":
+            return 200
+        elif quarto.tipo == "suite":
+            return 300
+
+
 class ClienteService:
     """
     Serviço para gerenciamento de clientes.
@@ -262,11 +272,11 @@ class ReservaService:
         return self._reservas
     
     def criarReserva(self, dataEntrada: date, dataSaida: date, 
-                     cliente: Cliente, quarto: Quarto, idReserva: int = None) -> Reserva:
+                 cliente: Cliente, quarto: Quarto, idReserva: int = None) -> Reserva:
         """Cria uma nova reserva."""
-        reserva = Reserva(dataCheckin=dataEntrada, dataCheckout=dataSaida,
-                         cliente=cliente, quarto=quarto, idReserva=idReserva)
-        
+        multa = 0.5 if quarto.tipo == "luxo" else 0.0  # regra externa simples
+        reserva = Reserva(dataCheckin=dataEntrada, dataCheckout=dataSaida, 
+                         cliente=cliente, quarto=quarto, multa=multa, idReserva=idReserva)
         # Calcular o valor total da reserva
         self._financeiro.calcular_fatura(reserva)
         

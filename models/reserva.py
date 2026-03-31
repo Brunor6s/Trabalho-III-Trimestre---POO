@@ -35,7 +35,7 @@ class Reserva:
     # Atributo de classe para controle de ID único
     _contador_id = 0
     
-    def __init__(self, dataCheckin: date, dataCheckout: date, cliente: 'Cliente', quarto: 'Quarto', idReserva: int = None):
+    def __init__(self, dataCheckin, dataCheckout, cliente: 'Cliente', quarto: 'Quarto', multa=0.0, idReserva: int=None):
         """
         Inicializa uma nova instância de Reserva com validações de integridade.
         
@@ -44,6 +44,7 @@ class Reserva:
             dataCheckout (date): Data de saída.
             cliente (Cliente): Instância do cliente solicitante.
             quarto (Quarto): Instância do quarto a ser ocupado.
+            multa (float, optional): Multa de cancelamento.
             idReserva (int, optional): ID manual, se fornecido (usado em persistência).
         
         Raises:
@@ -76,7 +77,7 @@ class Reserva:
         self._valorTotal = 0.0  # Inicializado em zero, calculado externamente pelo FinanceiroService
         self._cliente = cliente
         self._quarto = quarto
-        
+        self._multa = multa
         # Alteração de estado do objeto associado (Composição)
         # O Quarto passa a ser ocupado no momento da confirmação da reserva
         quarto.marcarOcupado()
@@ -166,6 +167,11 @@ class Reserva:
         print(f"[LOG] Sistema: Quarto {self.quarto.numero} liberado e disponível para novas reservas.")
         return True
     
+    def cancelar(self) -> str:
+        if self._multa > 0:
+            return f"Multa de {self._multa * 100}%"
+        return "Sem multa"
+    
     def __str__(self):
         """
         Retorna uma representação textual detalhada do objeto Reserva.
@@ -176,3 +182,31 @@ class Reserva:
                 f"Acomodação: Quarto {self.quarto.numero} ({self.quarto.tipo}) | "
                 f"Período: {self.dataCheckin.strftime('%d/%m/%Y')} até {self.dataCheckout.strftime('%d/%m/%Y')} | "
                 f"Status Financeiro: R$ {self.valorTotal:.2f}")
+
+
+# --- FUNÇÕES EXTERNAS DE REGRA DE NEGÓCIO (Padrão Strategy) ---
+
+def multa_padrao(reserva: 'Reserva') -> float:
+    """
+    Calcula multa padrão para cancelamento (sem multa).
+    
+    Args:
+        reserva (Reserva): A reserva a ser analisada.
+        
+    Returns:
+        float: 0.0 (sem multa)
+    """
+    return 0.0
+
+
+def multa_luxo(reserva: 'Reserva') -> float:
+    """
+    Calcula multa para cancelamento de quartos luxo.
+    
+    Args:
+        reserva (Reserva): A reserva a ser analisada.
+        
+    Returns:
+        float: 0.5 (multa de 50%)
+    """
+    return 0.5

@@ -71,12 +71,8 @@ class InterfaceCliente(BaseInterface):
         self.limpar_conteudo()
         
         # Buscar reservas do cliente
-        cliente_obj = self.usuario.get('objeto')
-        minhas_reservas = []
-        
-        if cliente_obj:
-            minhas_reservas = [r for r in self.services['reserva'].reservas 
-                              if r.cliente == cliente_obj]
+        cliente_obj = self.services['cliente'].buscarPorEmail(self.usuario['email'])
+        minhas_reservas = self.services['reserva'].buscarPorCliente(cliente_obj)
         
         criar_titulo_pagina(self.conteudo_frame, "Minhas Reservas",
                           f"Você tem {len(minhas_reservas)} reserva(s)")
@@ -269,7 +265,7 @@ class InterfaceCliente(BaseInterface):
                 data_out = date(int(ano_out.get()), int(mes_out.get()), int(dia_out.get()))
                 
                 # Criar reserva
-                cliente_obj = self.usuario.get('objeto')
+                cliente_obj = self.services['cliente'].buscarPorEmail(self.usuario['email'])
                 reserva = self.services['reserva'].criarReserva(
                     dataEntrada=data_in,
                     dataSaida=data_out,

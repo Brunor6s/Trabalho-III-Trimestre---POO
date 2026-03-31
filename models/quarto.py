@@ -88,6 +88,10 @@ class Quarto(ABC):
         print(f"[REVISÃO] Quarto {self.numero} entrou em fila de limpeza.")
         return True
     
+    def calcular_multa(self) -> float:
+        """Calcula a multa para cancelamento. Base retorna 0."""
+        return 0.0
+    
     def __str__(self):
         """Representação textual rica para listagem em tabelas e logs."""
         status = "✅ DISPONÍVEL" if self.disponivel else "❌ OCUPADO"
